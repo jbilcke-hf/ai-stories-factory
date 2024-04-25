@@ -2,7 +2,7 @@ import { ComponentProps } from "react";
 
 import { Textarea } from "../ui/textarea";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 export function TextareaField({
   label,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Head from "next/head"
 import Script from "next/script"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/cn"
 
 import { Main } from "./main"
 

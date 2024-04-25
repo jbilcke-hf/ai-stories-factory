@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 import './globals.css'
 import type { Metadata } from 'next'
 import { inter, salsa } from './fonts'

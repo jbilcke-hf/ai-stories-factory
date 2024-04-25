@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { InputField } from '@/components/form/input-field'
 import { Toaster } from '@/components/ui/sonner'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 
 import { useStore } from './store'
 import { TextareaField } from '@/components/form/textarea-field'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
+import { generateClap } from './server/aitube/generateClap'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -39,7 +40,23 @@ export function Main() {
   const isBusy = status === "generating" || hasPendingTasks
 
   const handleSubmit = async () => {
+    const prompt = storyPromptDraft
 
+    setStatus("generating")
+    setStoryPrompt(prompt)
+
+    startTransition(async () => {
+      console.log(`handleSubmit(): generating a clap using prompt = "${prompt}" `)
+
+      try {
+        const clap = await generateClap({ prompt })
+
+        console.log(`handleSubmit(): received a clap = `, clap)
+        setStatus("finished")
+      } catch (err) {
+        setStatus("error")
+      }
+    })
   }
 
   return (
