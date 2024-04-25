@@ -19,7 +19,7 @@ export const useStore = create<{
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
 }>((set, get) => ({
-  storyPromptDraft: "",
+  storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
   storyPrompt: "",
   status: "idle",
   storyGenerationStatus: "idle",

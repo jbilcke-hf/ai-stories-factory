@@ -22,19 +22,25 @@ export function TextareaField({
       className
       )}>
       {label && <Label className={cn(`
-      text-xl text-stone-900/90 dark:text-stone-100/90
-      `, labelClassName)}>{label}</Label>}
+      text-base md:text-lg lg:text-xl
+      text-stone-900/90 dark:text-stone-100/90
+      `, labelClassName)}
+      style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>{label}</Label>}
       <Textarea {...props} className={cn(`
-      text-xl
-      rounded-2xl
-            
-      border-yellow-300 dark:border-yellow-300
-      outline-yellow-300 dark:outline-yellow-300
-      ring-yellow-300 dark:ring-yellow-300
-      ring-offset-yellow-300 dark:ring-offset-yellow-300
+      text-base md:text-lg lg:text-xl
+      rounded-lg md:rounded-xl lg:rounded-2xl
+      border-2
+      backdrop-blur-2xl
+      border-stone-800/80 dark:border-stone-800/80
+      outline-stone-800/80 dark:outline-stone-800/80
+      ring-stone-800/80 dark:ring-stone-800/80
+      ring-offset-stone-800/0 dark:ring-offset-stone-800/0
       placeholder:text-stone-900/50 dark:placeholder:text-stone-100/50
-      p-6
-      `, inputClassName)} />
+      focus-visible:ring-amber-400/100 dark:focus-visible:ring-amber-400/100
+      p-2 md:p-4 lg:p-6
+      `, inputClassName)}
+      style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
+      />
     </div>
   )
 }

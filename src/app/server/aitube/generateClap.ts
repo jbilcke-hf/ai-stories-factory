@@ -19,7 +19,7 @@ export async function generateClap({
   // console.log(`calling `+ gradioApi + (gradioApi.endsWith("/") ? "" : "/") + "api/predict")
 
   // remember: a space needs to be public for the classic fetch() to work
-  const res = await fetch(aitubeApiUrl, {
+  const res = await fetch(`${aitubeApiUrl}generate/story`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

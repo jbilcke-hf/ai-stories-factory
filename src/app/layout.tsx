@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 import { inter, salsa } from './fonts'
 
 export const metadata: Metadata = {
-  title: 'Illustrateur (non-commercial usage only)',
-  description: 'Illustrateur - for non-commercial usage only',
+  title: 'AI Stories Factory - Generate video stories using AI ✨',
+  description: 'AI Stories Factory - Generate video stories using AI ✨',
 }
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(
-        `h-full w-full overflow-none`,
+        `h-full w-full overflow-none light`,
         salsa.className
         )}>
         {children}

@@ -21,7 +21,9 @@ export function SelectField({
       `flex flex-col space-y-3 items-start`,
       className
       )}>
-      {label && <Label className={cn("text-xl text-stone-900/90 dark:text-stone-100/90", labelClassName)}>{label}</Label>}
+      {label && <Label className={cn(`
+      text-base md:text-lg lg:text-xl
+      text-stone-900/90 dark:text-stone-100/90`, labelClassName)}>{label}</Label>}
       <Select {...props} />
     </div>
   )

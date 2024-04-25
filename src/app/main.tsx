@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState, useTransition } from 'react'
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { InputField } from '@/components/form/input-field'
 import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils/cn'
 
@@ -65,14 +64,18 @@ export function Main() {
       // `bg-zinc-800`,
       `bg-gradient-to-br from-amber-600 to-yellow-500`, 
       // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
-      `w-screen h-screen overflow-hidden`,
+      `w-screen h-screen overflow-y-scroll md:overflow-hidden`,
     )}>
       <div className="flex flex-col w-full">
-        <div className="flex flex-col md:flex-row w-full">
+        <div className="
+        flex flex-col md:flex-row w-full
+        "
+        style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}>
           <div className={cn(
             `flex flex-col w-full md:w-[512px]`,
             `transition-all duration-300 ease-in-out`,
-            `ml-12 pt-24`,
+            `ml-0 lg:ml-12`,
+            `pt-4 sm:pt-8 md:pt-16 lg:pt-24`,
           )}>
             <Card className={cn(
              //  `shadow-2xl z-30 rounded-3xl`,
@@ -93,35 +96,74 @@ export function Main() {
                   <div className="
                     flex flex-row
                     items-center justify-center
-             
+                    transition-all duration-200 ease-in-out
                     px-3
                     
                     rounded-full">
-                    <div className="
+                    <div
+                    className="
                       flex
+                      transition-all duration-200 ease-in-out
                       items-center justify-center text-center
-                      w-16 h-16 rounded-lg
+                      w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16
+                      text-3xl md:text-4xl lg:text-5xl
+                      rounded-lg
                       mr-2
                       font-sans
-                      bg-yellow-400 dark:bg-yellow-400
-                      text-5xl text-stone-900/80 dark:text-stone-900/80 font-bold
-                      ">AI</div>
-                      <div className="text-yellow-400 dark:text-yellow-400 text-5xl">Stories Factory</div>
+                      bg-amber-400 dark:bg-amber-400
+                     
+                      text-stone-950/80 dark:text-stone-950/80 font-bold
+                      "
+                      >AI</div>
+                      <div
+                        className="
+                        transition-all duration-200 ease-in-out
+                        text-amber-400 dark:text-amber-400
+                        text-3xl md:text-4xl lg:text-5xl
+                        "
+
+                        style={{ textShadow: "#00000035 0px 0px 2px" }}
+                    
+                        /*
+                        className="
+                        text-5xl
+                        bg-gradient-to-br from-yellow-300 to-yellow-500
+                        inline-block text-transparent bg-clip-text
+                        py-6
+                        "
+                        */
+                      >Stories Factory</div>
                     </div>
 
-                    <p className="text-stone-900/90 dark:text-stone-100/90 text-2xl text-center pt-4">Generate video stories with AI ✨</p>
+                    <p
+                      className="
+                      transition-all duration-200 ease-in-out
+                      text-stone-900/90 dark:text-stone-100/90
+                      text-lg md:text-xl lg:text-2xl
+                      text-center 
+                      pt-2 md:pt-4
+                      "
+                      style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
+                    >Generate video stories using AI ✨</p>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col">
-                  <div className="flex flex-col space-y-4 mt-0">
+                  <div className="
+                  flex flex-col
+                  transition-all duration-200 ease-in-out
+                  space-y-2 md:space-y-4 mt-0
+                  ">
                     <TextareaField
-                      label="Your story:"
+                      label="My story:"
                       // disabled={modelState != 'ready'}
                       onChange={(e) => {
                         setStoryPromptDraft(e.target.value)
                       }}
                       placeholder="Yesterday I was at my favorite pizza place and.."
-                      inputClassName="h-80"
+                      inputClassName="
+                      transition-all duration-200 ease-in-out
+                      h-32 md:h-56 lg:h-64
+                      "
                       disabled={isBusy}
                       value={storyPromptDraft}
                     />
@@ -131,16 +173,17 @@ export function Main() {
                     <div className="flex flex-row justify-between items-center space-x-3">
                       <Button
                         onClick={handleSubmit}
-                        disabled={isBusy}
+                        disabled={!storyPromptDraft || isBusy}
                         // variant="ghost"
                         className={cn(
-                          `text-xl`,
-                          `bg-stone-50/90 text-stone-900/80`,
+                          `text-lg md:text-xl lg:text-2xl`,
+                          `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
                           `font-bold`,
-                          `hover:bg-stone-50 hover:text-stone-900/90`,
+                          `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                          storyPromptDraft ? "opacity-100" : "opacity-80"
                         )}
                       >
-                        🖍️ Write
+                       <span className="mr-1">Generate</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
                       </Button>
                     </div>
                   </div>
@@ -155,14 +198,16 @@ export function Main() {
               </Card>
           </div>
           <div className={cn(
-            `flex flex-col items-center justify-center`,
+            `flex flex-col items-center justify-start md:justify-center`,
             `flex-1`,
-            `h-screen`,
+            `md:h-screen`,
             // `transition-all duration-300 ease-in-out`
           )}>
             
             <div className={cn(`
-              scale-[1.2]
+              -mt-24 md:mt-0
+              transition-all duration-200 ease-in-out
+              scale-[0.7] md:scale-[0.9] lg:scale-[1.2]
             `)}>
               <DeviceFrameset
                 device="Nexus 5"
