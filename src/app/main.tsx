@@ -12,6 +12,8 @@ import { TextareaField } from '@/components/form/textarea-field'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
 import { generateClap } from './server/aitube/generateClap'
+import { ClapOutputType, ClapProject } from '@/lib/clap/types'
+import { extendClap } from './server/aitube/extendClap'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -42,19 +44,43 @@ export function Main() {
     const prompt = storyPromptDraft
 
     setStatus("generating")
+    setStoryGenerationStatus("generating")
     setStoryPrompt(prompt)
 
     startTransition(async () => {
       console.log(`handleSubmit(): generating a clap using prompt = "${prompt}" `)
 
+      let clap: ClapProject | undefined = undefined
       try {
-        const clap = await generateClap({ prompt })
+        clap = await generateClap({ prompt })
 
         console.log(`handleSubmit(): received a clap = `, clap)
-        setStatus("finished")
+        setStoryGenerationStatus("finished")
       } catch (err) {
+        setStoryGenerationStatus("error")
         setStatus("error")
+        return
       }
+      if (!clap) {
+        return
+      }
+
+      try {
+        setImageGenerationStatus("generating")
+        clap = await extendClap({ clap })
+
+        console.log(`handleSubmit(): received a clap with images = `, clap)
+        setImageGenerationStatus("finished")
+      } catch (err) {
+        setImageGenerationStatus("error")
+        setStatus("error")
+        return
+      }
+      if (!clap) {
+        return
+      }
+
+      setStatus("finished")
     })
   }
 
@@ -65,12 +91,13 @@ export function Main() {
       `bg-gradient-to-br from-amber-600 to-yellow-500`, 
       // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
       `w-screen h-screen overflow-y-scroll md:overflow-hidden`,
-    )}>
+    )}
+    style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}>
       <div className="flex flex-col w-full">
         <div className="
         flex flex-col md:flex-row w-full
         "
-        style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}>
+        >
           <div className={cn(
             `flex flex-col w-full md:w-[512px]`,
             `transition-all duration-300 ease-in-out`,
