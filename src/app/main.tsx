@@ -14,6 +14,7 @@ import 'react-device-frameset/styles/marvel-devices.min.css'
 import { generateClap } from './server/aitube/generateClap'
 import { ClapOutputType, ClapProject } from '@/lib/clap/types'
 import { extendClap } from './server/aitube/extendClap'
+import { exportClap } from './server/aitube/exportClap'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -80,6 +81,22 @@ export function Main() {
         return
       }
 
+      let assetUrl = ""
+      try {
+        setVideoGenerationStatus("generating")
+        assetUrl = await exportClap({ clap })
+
+        console.log(`handleSubmit(): received a video:`, assetUrl)
+        setVideoGenerationStatus("finished")
+      } catch (err) {
+        setVideoGenerationStatus("error")
+        setStatus("error")
+        return
+      }
+      if (!assetUrl) {
+        return
+      }
+      
       setStatus("finished")
     })
   }
