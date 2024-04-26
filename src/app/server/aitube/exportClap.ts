@@ -1,35 +1,12 @@
 "use server"
 
-import { ClapProject } from "@/lib/clap/types"
-import { serializeClap } from "@/lib/clap/serializeClap"
-import { blobToDataUri } from "@/lib/base64/blobToDataUri"
-
-import { aitubeApiUrl } from "../config"
+import { ClapProject } from "@aitube/clap"
+import * as aitube from "@aitube/client"
 
 export async function exportClap({
   clap,
 }: {
   clap: ClapProject
 }): Promise<string> {
-  if (!clap) { throw new Error(`please provide a clap`) }
-
-  // remember: a space needs to be public for the classic fetch() to work
-  const res = await fetch(`${aitubeApiUrl}generate/video`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // TODO pass the JWT so that only the AI Stories Factory can call the API
-      // Authorization: `Bearer ${hfApiToken}`,
-    },
-    body: await serializeClap(clap),
-    cache: "no-store",
-    // we can also use this (see https://vercel.com/blog/vercel-cache-api-nextjs-cache)
-    // next: { revalidate: 1 }
-  })
-
-  const blob = await res.blob()
-
-  const dataURL = await blobToDataUri(blob)
-  
-  return dataURL
+  return aitube.exportClap({ clap })
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState, useTransition } from 'react'
+import { ClapProject } from '@aitube/clap'
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,6 @@ import { TextareaField } from '@/components/form/textarea-field'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
 import { generateClap } from './server/aitube/generateClap'
-import { ClapOutputType, ClapProject } from '@/lib/clap/types'
 import { extendClap } from './server/aitube/extendClap'
 import { exportClap } from './server/aitube/exportClap'
 
