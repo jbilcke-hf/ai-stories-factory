@@ -34,9 +34,9 @@ export function Main() {
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
 
   const hasPendingTasks =
-    storyGenerationStatus === "generating" &&
-    voiceGenerationStatus === "generating" &&
-    imageGenerationStatus === "generating" &&
+    storyGenerationStatus === "generating" ||
+    voiceGenerationStatus === "generating" ||
+    imageGenerationStatus === "generating" ||
     videoGenerationStatus === "generating"
 
   const isBusy = status === "generating" || hasPendingTasks
