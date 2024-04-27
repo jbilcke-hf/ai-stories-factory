@@ -12,9 +12,9 @@ import { useStore } from './store'
 import { TextareaField } from '@/components/form/textarea-field'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
-import { generateClap } from './server/aitube/generateClap'
-import { extendClap } from './server/aitube/extendClap'
-import { exportClap } from './server/aitube/exportClap'
+import { createClap } from './server/aitube/createClap'
+import { editClapStoryboards } from './server/aitube/editClapStoryboards'
+import { exportClapToVideo } from './server/aitube/exportClapToVideo'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -53,7 +53,7 @@ export function Main() {
 
       let clap: ClapProject | undefined = undefined
       try {
-        clap = await generateClap({ prompt })
+        clap = await createClap({ prompt })
 
         console.log(`handleSubmit(): received a clap = `, clap)
         setStoryGenerationStatus("finished")
@@ -68,7 +68,7 @@ export function Main() {
 
       try {
         setImageGenerationStatus("generating")
-        clap = await extendClap({ clap })
+        clap = await editClapStoryboards({ clap })
 
         console.log(`handleSubmit(): received a clap with images = `, clap)
         setImageGenerationStatus("finished")
@@ -84,7 +84,7 @@ export function Main() {
       let assetUrl = ""
       try {
         setVideoGenerationStatus("generating")
-        assetUrl = await exportClap({ clap })
+        assetUrl = await exportClapToVideo({ clap })
 
         console.log(`handleSubmit(): received a video:`, assetUrl)
         setVideoGenerationStatus("finished")
