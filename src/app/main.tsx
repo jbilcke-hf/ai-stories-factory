@@ -131,11 +131,11 @@ export function Main() {
 
       let assetUrl = ""
       try {
-        setProgress(23)
+        setProgress(50)
         setVideoGenerationStatus("generating")
         assetUrl = await exportClapToVideo({ clap })
 
-        console.log(`handleSubmit(): received a video:`, assetUrl)
+        console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
         setVideoGenerationStatus("finished")
       } catch (err) {
         setVideoGenerationStatus("error")
