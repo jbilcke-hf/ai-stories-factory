@@ -14,6 +14,8 @@ export const useStore = create<{
   videoGenerationStatus: TaskStatus
   generatedClap?: ClapProject
   generatedVideo: string
+  progress: number
+  error: string
   setStoryPromptDraft: (storyPromptDraft: string) => void
   setStoryPrompt: (storyPrompt: string) => void
   setStatus: (status: GlobalStatus) => void
@@ -23,6 +25,8 @@ export const useStore = create<{
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
   setGeneratedClap: (generatedClap?: ClapProject) => void
   setGeneratedVideo: (generatedVideo: string) => void
+  setProgress: (progress: number) => void
+  setError: (error: string) => void
 }>((set, get) => ({
   storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
   storyPrompt: "",
@@ -33,6 +37,8 @@ export const useStore = create<{
   videoGenerationStatus: "idle",
   generatedClap: undefined,
   generatedVideo: "",
+  progress: 0,
+  error: "",
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => { set({ status }) },
@@ -42,4 +48,6 @@ export const useStore = create<{
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => { set({ videoGenerationStatus }) },
   setGeneratedClap: (generatedClap?: ClapProject) => { set({ generatedClap }) },
   setGeneratedVideo: (generatedVideo: string) => { set({ generatedVideo }) },
+  setProgress: (progress: number) => { set({ progress }) },
+  setError: (error: string) => { set({ error }) },
 }))

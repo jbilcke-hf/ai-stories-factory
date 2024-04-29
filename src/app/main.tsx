@@ -34,12 +34,16 @@ export function Main() {
   const setStoryPromptDraft = useStore(s => s.setStoryPromptDraft)
   const setStoryPrompt = useStore(s => s.setStoryPrompt)
   const setStatus = useStore(s => s.setStatus)
+  const error = useStore(s => s.error)
+  const setError = useStore(s => s.setError)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
   const setGeneratedClap = useStore(s => s.setGeneratedClap)
   const setGeneratedVideo = useStore(s => s.setGeneratedVideo)
+  const progress = useStore(s => s.progress)
+  const setProgress = useStore(s => s.setProgress)
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
@@ -61,9 +65,12 @@ export function Main() {
 
       let clap: ClapProject | undefined = undefined
       try {
+        setProgress(0)
         clap = await createClap({ prompt })
 
         if (!clap) { throw new Error(`failed to create the clap`) }
+
+        if (clap.segments.length <= 1) { throw new Error(`failed to generate more than one segments`) }
 
         console.log(`handleSubmit(): received a clap = `, clap)
         setGeneratedClap(clap)
@@ -71,6 +78,7 @@ export function Main() {
       } catch (err) {
         setStoryGenerationStatus("error")
         setStatus("error")
+        setError(`${err}`)
         return
       }
       if (!clap) {
@@ -81,6 +89,7 @@ export function Main() {
       console.log("handleSubmit(): TODO Julian: generate images in parallel of the dialogue using Promise.all()")
 
       try {
+        setProgress(5)
         setImageGenerationStatus("generating")
         clap = await editClapStoryboards({ clap })
 
@@ -92,6 +101,7 @@ export function Main() {
       } catch (err) {
         setImageGenerationStatus("error")
         setStatus("error")
+        setError(`${err}`)
         return
       }
       if (!clap) {
@@ -100,6 +110,7 @@ export function Main() {
 
       
       try {
+        setProgress(8)
         setVoiceGenerationStatus("generating")
         clap = await editClapDialogues({ clap })
 
@@ -111,6 +122,7 @@ export function Main() {
       } catch (err) {
         setVoiceGenerationStatus("error")
         setStatus("error")
+        setError(`${err}`)
         return
       }
       if (!clap) {
@@ -119,6 +131,7 @@ export function Main() {
 
       let assetUrl = ""
       try {
+        setProgress(23)
         setVideoGenerationStatus("generating")
         assetUrl = await exportClapToVideo({ clap })
 
@@ -127,6 +140,7 @@ export function Main() {
       } catch (err) {
         setVideoGenerationStatus("error")
         setStatus("error")
+        setError(`${err}`)
         return
       }
       if (!assetUrl) {
@@ -135,6 +149,7 @@ export function Main() {
 
       setGeneratedVideo(assetUrl)
       setStatus("finished")
+      setError("")
     })
   }
 
@@ -327,6 +342,8 @@ export function Main() {
                         : videoGenerationStatus === "generating" ? "Assembling final video.."
                         : "Please wait.."
                       )
+                      : status === "error"
+                      ? <span>{error || ""}</span>
                       : <span>&nbsp;</span> // to prevent layout changes
                      }
                     </div>
@@ -361,7 +378,11 @@ export function Main() {
                 w-full h-full
                 bg-black text-white
                 ">
-                  {generatedVideo && <video
+                  {isBusy ? <div className="
+                  flex flex-col 
+                  items-center justify-center
+                  text-2xl text-center font-bold">{progress}%</div>
+                  : generatedVideo ? <video
                     src={generatedVideo}
                     controls
                     autoPlay
@@ -371,7 +392,10 @@ export function Main() {
                     className="object-cover"
                     style={{
                     }}
-                  />}
+                  /> : <div  className="
+                  flex flex-col 
+                  items-center justify-center
+                  text-lg text-center"></div>}
                 </div>
               </DeviceFrameset>
             </div>
