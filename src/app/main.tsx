@@ -1,20 +1,24 @@
 "use client"
 
-import React, { useEffect, useRef, useState, useTransition } from 'react'
+import React, { useTransition } from 'react'
 import { ClapProject } from '@aitube/clap'
+import Image from "next/image"
+import { DeviceFrameset } from 'react-device-frameset'
+import 'react-device-frameset/styles/marvel-devices.min.css'
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
+import { TextareaField } from '@/components/form/textarea-field'
 import { cn } from '@/lib/utils/cn'
 
-import { useStore } from './store'
-import { TextareaField } from '@/components/form/textarea-field'
-import { DeviceFrameset } from 'react-device-frameset'
-import 'react-device-frameset/styles/marvel-devices.min.css'
 import { createClap } from './server/aitube/createClap'
+import { editClapDialogues } from './server/aitube/editClapDialogues'
 import { editClapStoryboards } from './server/aitube/editClapStoryboards'
 import { exportClapToVideo } from './server/aitube/exportClapToVideo'
+
+import { useStore } from './store'
+import HFLogo from "./hf-logo.svg"
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -25,6 +29,8 @@ export function Main() {
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
   const imageGenerationStatus = useStore(s => s.imageGenerationStatus)
   const videoGenerationStatus = useStore(s => s.videoGenerationStatus)
+  const generatedClap = useStore(s => s.generatedClap)
+  const generatedVideo = useStore(s => s.generatedVideo)
   const setStoryPromptDraft = useStore(s => s.setStoryPromptDraft)
   const setStoryPrompt = useStore(s => s.setStoryPrompt)
   const setStatus = useStore(s => s.setStatus)
@@ -32,6 +38,8 @@ export function Main() {
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
+  const setGeneratedClap = useStore(s => s.setGeneratedClap)
+  const setGeneratedVideo = useStore(s => s.setGeneratedVideo)
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
@@ -55,7 +63,10 @@ export function Main() {
       try {
         clap = await createClap({ prompt })
 
+        if (!clap) { throw new Error(`failed to create the clap`) }
+
         console.log(`handleSubmit(): received a clap = `, clap)
+        setGeneratedClap(clap)
         setStoryGenerationStatus("finished")
       } catch (err) {
         setStoryGenerationStatus("error")
@@ -66,14 +77,39 @@ export function Main() {
         return
       }
 
+      // TODO Julian
+      console.log("handleSubmit(): TODO Julian: generate images in parallel of the dialogue using Promise.all()")
+
       try {
         setImageGenerationStatus("generating")
         clap = await editClapStoryboards({ clap })
 
+        if (!clap) { throw new Error(`failed to edit the storyboards`) }
+
         console.log(`handleSubmit(): received a clap with images = `, clap)
+        setGeneratedClap(clap)
         setImageGenerationStatus("finished")
       } catch (err) {
         setImageGenerationStatus("error")
+        setStatus("error")
+        return
+      }
+      if (!clap) {
+        return
+      }
+
+      
+      try {
+        setVoiceGenerationStatus("generating")
+        clap = await editClapDialogues({ clap })
+
+        if (!clap) { throw new Error(`failed to edit the dialogues`) }
+
+        console.log(`handleSubmit(): received a clap with dialogues = `, clap)
+        setGeneratedClap(clap)
+        setVoiceGenerationStatus("finished")
+      } catch (err) {
+        setVoiceGenerationStatus("error")
         setStatus("error")
         return
       }
@@ -96,7 +132,8 @@ export function Main() {
       if (!assetUrl) {
         return
       }
-      
+
+      setGeneratedVideo(assetUrl)
       setStatus("finished")
     })
   }
@@ -105,25 +142,51 @@ export function Main() {
     <div className={cn(
       `fixed`,
       // `bg-zinc-800`,
-      `bg-gradient-to-br from-amber-600 to-yellow-500`, 
+      // old style, more "amber"
+      // `bg-gradient-to-br from-amber-600 to-yellow-500`, 
+
+      // nice style!
+      // `bg-gradient-to-br from-amber-700 to-yellow-300`, 
+
+      // warm orange, a bit flash but not bad, not bad at all
+     // `bg-gradient-to-br from-orange-700 to-yellow-400`, 
+   
+     // nice "AiTube" vibe
+     `bg-gradient-to-br from-red-700 to-yellow-400`, 
+   
+     // pretty cool lime!
+     // `bg-gradient-to-br from-lime-700 to-yellow-400`, 
+
+     // new style, pretty "fresh" - maybe too bright? 
+     // use a dark logo for this one
+     // `bg-gradient-to-br from-yellow-200 to-yellow-500`, 
+      
+     // too pastel
+     // `bg-gradient-to-br from-yellow-200 to-red-300`, 
+      
       // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
-      `w-screen h-screen overflow-y-scroll md:overflow-hidden`,
+      `w-screen h-full overflow-y-scroll md:overflow-hidden`,
     )}
     style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}>
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-screen h-screen">
         <div className="
         flex flex-col md:flex-row w-full
+        items-center md:justify-center
+        flex-1
         "
         >
           <div className={cn(
-            `flex flex-col w-full md:w-[512px]`,
-            `transition-all duration-300 ease-in-out`,
-            `ml-0 lg:ml-12`,
-            `pt-4 sm:pt-8 md:pt-16 lg:pt-24`,
+            `flex flex-col md:h-full md:items-center md:justify-center`,
+            `w-full md:w-1/2`,
+            `transition-all duration-200 ease-in-out`,
+            `ml-0`,
+            `pt-4 sm:pt-0`,
           )}>
             <Card className={cn(
              //  `shadow-2xl z-30 rounded-3xl`,
              `shadow-none`,
+             `w-full md:ml-[12%] md:w-[95%]`,
+              `transition-all duration-200 ease-in-out`,
               `bg-transparent dark:bg-transparent`,
              // `backdrop-blur-2xl dark:backdrop-blur-2xl`,
               // `bg-amber-500 dark:bg-amber-500`,
@@ -188,7 +251,7 @@ export function Main() {
                       pt-2 md:pt-4
                       "
                       style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
-                    >Generate video stories using AI ✨</p>
+                    >Make vertical video stories using AI ✨</p>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col">
@@ -198,7 +261,7 @@ export function Main() {
                   space-y-2 md:space-y-4 mt-0
                   ">
                     <TextareaField
-                      label="My story:"
+                      // label="My story:"
                       // disabled={modelState != 'ready'}
                       onChange={(e) => {
                         setStoryPromptDraft(e.target.value)
@@ -214,7 +277,28 @@ export function Main() {
                 </div>
                 <div className="flex-flex-row space-y-3 pt-4">
                   <div className="flex flex-row justify-end items-center">
-                    <div className="flex flex-row justify-between items-center space-x-3">
+                    <div className="
+                    w-full
+                    flex flex-row
+                    justify-end items-center
+                    space-x-3">
+                      {/*
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={!storyPromptDraft || isBusy || !generatedClap}
+                        // variant="ghost"
+                        className={cn(
+                          `text-sm md:text-base lg:text-lg`,
+                          `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                          `font-bold`,
+                          `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                          storyPromptDraft ? "opacity-100" : "opacity-80"
+                        )}
+                      >
+                       <span className="mr-1">Save</span>
+                      </Button>
+                      */}
+
                       <Button
                         onClick={handleSubmit}
                         disabled={!storyPromptDraft || isBusy}
@@ -227,14 +311,23 @@ export function Main() {
                           storyPromptDraft ? "opacity-100" : "opacity-80"
                         )}
                       >
-                       <span className="mr-1">Generate</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
+                       <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
                       </Button>
                     </div>
                   </div>
-                    <div className="text-stone-900/90 dark:text-stone-100/90 text-xs w-full text-right">
+                    <div className="
+                    text-stone-900/90 dark:text-stone-100/90
+                    text-sm md:text-base lg:text-lg
+                    w-full text-right">
                     {isBusy
-                      ? `Generation in progress (${status})`
-                      : ""
+                      ? (
+                        storyGenerationStatus === "generating" ? "Enhancing the story.."
+                        : imageGenerationStatus === "generating" ? "Generating storyboards.."
+                        : voiceGenerationStatus === "generating" ? "Generating voices.."
+                        : videoGenerationStatus === "generating" ? "Assembling final video.."
+                        : "Please wait.."
+                      )
+                      : <span>&nbsp;</span> // to prevent layout changes
                      }
                     </div>
                   </div>
@@ -242,10 +335,11 @@ export function Main() {
               </Card>
           </div>
           <div className={cn(
-            `flex flex-col items-center justify-start md:justify-center`,
-            `flex-1`,
-            `md:h-screen`,
-            // `transition-all duration-300 ease-in-out`
+            `flex flex-col items-center justify-center`,
+            `flex-1 h-full`,
+            // `transition-all duration-200 ease-in-out`
+
+            `-mt-[100px] -mb-[90px] md:-mt-0 md:-mb-0`,
           )}>
             
             <div className={cn(`
@@ -256,11 +350,48 @@ export function Main() {
               <DeviceFrameset
                 device="Nexus 5"
                 // color="black"
+
+                // note: videos are generated in 512x1024
+                // so we need to keep the same ratio here
+                width={256}
+                height={512}
               >
-                <div className="bg-black w-full h-full text-white">Hello world</div>
+                <div className="
+                flex flex-col items-center justify-center
+                w-full h-full
+                bg-black text-white
+                ">
+                  {generatedVideo && <video
+                    src={generatedVideo}
+                    controls
+                    autoPlay
+                    playsInline
+                    muted
+                    loop
+                    className="object-cover"
+                    style={{
+                    }}
+                  />}
+                </div>
               </DeviceFrameset>
             </div>
           </div>
+        </div>
+
+        <div className="
+        flex flex-row items-center justify-end
+        w-full p-6
+        font-sans">
+          <span className="text-stone-950/60 text-2xs"
+            style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>
+            Powered by
+          </span>
+          <span className="ml-1.5 mr-1">
+            <Image src={HFLogo} alt="Hugging Face" width="16" height="16" />
+          </span>
+          <span className="text-stone-950/60 text-xs font-bold"
+            style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>Hugging Face</span>
+    
         </div>
       </div>
       <Toaster />

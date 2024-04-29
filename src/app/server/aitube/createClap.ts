@@ -12,6 +12,11 @@ export async function createClap({
 }): Promise<ClapProject> {
   const clap: ClapProject = await apiCreateClap({
     prompt,
+
+    // the vertical video look 🤳
+    height: 1024,
+    width: 512,
+
     token: await getToken()
   })
 

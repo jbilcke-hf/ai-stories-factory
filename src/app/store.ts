@@ -1,6 +1,7 @@
 "use client"
 
 import { GlobalStatus, TaskStatus } from "@/types"
+import { ClapProject } from "@aitube/clap"
 import { create } from "zustand"
 
 export const useStore = create<{
@@ -11,6 +12,8 @@ export const useStore = create<{
   voiceGenerationStatus: TaskStatus
   imageGenerationStatus: TaskStatus
   videoGenerationStatus: TaskStatus
+  generatedClap?: ClapProject
+  generatedVideo: string
   setStoryPromptDraft: (storyPromptDraft: string) => void
   setStoryPrompt: (storyPrompt: string) => void
   setStatus: (status: GlobalStatus) => void
@@ -18,6 +21,8 @@ export const useStore = create<{
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
+  setGeneratedClap: (generatedClap?: ClapProject) => void
+  setGeneratedVideo: (generatedVideo: string) => void
 }>((set, get) => ({
   storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
   storyPrompt: "",
@@ -26,6 +31,8 @@ export const useStore = create<{
   voiceGenerationStatus: "idle",
   imageGenerationStatus: "idle",
   videoGenerationStatus: "idle",
+  generatedClap: undefined,
+  generatedVideo: "",
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => { set({ status }) },
@@ -33,4 +40,6 @@ export const useStore = create<{
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => { set({ voiceGenerationStatus }) },
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => { set({ imageGenerationStatus }) },
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => { set({ videoGenerationStatus }) },
+  setGeneratedClap: (generatedClap?: ClapProject) => { set({ generatedClap }) },
+  setGeneratedVideo: (generatedVideo: string) => { set({ generatedVideo }) },
 }))

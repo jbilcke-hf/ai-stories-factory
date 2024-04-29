@@ -21,9 +21,9 @@ export default function Page() {
         <meta name="viewport" content="width=device-width, initial-scale=0.86, maximum-scale=5.0, minimum-scale=0.86" />
       </Head>
       <main className={cn(
-        `light text-cyan-900`,
-        // `bg-gradient-to-r from-green-500 to-yellow-400`,
-        `bg-gradient-to-r from-cyan-500 to-blue-400`,
+        ``,
+        `text-stone-900/90 dark:text-stone-100/90`,
+        `bg-stone-500`,
         )}>
         {isLoaded && <Main />}
       </main>

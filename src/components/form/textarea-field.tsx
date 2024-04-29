@@ -21,16 +21,19 @@ export function TextareaField({
       `flex flex-col space-y-3 items-start`,
       className
       )}>
-      {label && <Label className={cn(`
-      text-base md:text-lg lg:text-xl
-      text-stone-900/90 dark:text-stone-100/90
-      `, labelClassName)}
+      {label && <Label className={cn(
+      `text-base md:text-lg lg:text-xl`,
+      `text-stone-900/90 dark:text-stone-100/90`,
+      labelClassName)}
       style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>{label}</Label>}
       <Textarea {...props} className={cn(`
       text-base md:text-lg lg:text-xl
       rounded-lg md:rounded-xl lg:rounded-2xl
       border-2
-      backdrop-blur-2xl
+      
+      bg-stone-800/90 text-amber-400/100
+      dark:bg-stone-800/90 dark:text-amber-400/100
+
       border-stone-800/80 dark:border-stone-800/80
       outline-stone-800/80 dark:outline-stone-800/80
       ring-stone-800/80 dark:ring-stone-800/80
