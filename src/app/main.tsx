@@ -410,7 +410,7 @@ export function Main() {
         </div>
 
         <div className="
-        absolute bottom-0 right-0
+        md:absolute md:bottom-0 md:right-0
         flex flex-row items-center justify-end
         w-full p-6
         font-sans">
