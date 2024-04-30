@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useTransition } from 'react'
+import React, { useRef, useTransition } from 'react'
 import { ClapProject } from '@aitube/clap'
 import Image from "next/image"
 import { DeviceFrameset } from 'react-device-frameset'
@@ -23,6 +23,8 @@ import HFLogo from "./hf-logo.svg"
 export function Main() {
   const [_isPending, startTransition] = useTransition()
   const storyPromptDraft = useStore(s => s.storyPromptDraft)
+  const promptDraft = useRef("")
+  promptDraft.current = storyPromptDraft
   const storyPrompt = useStore(s => s.storyPrompt)
   const status = useStore(s => s.status)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
@@ -54,19 +56,19 @@ export function Main() {
   const isBusy = status === "generating" || hasPendingTasks
 
   const handleSubmit = async () => {
-    const prompt = storyPromptDraft
-
-    setStatus("generating")
-    setStoryGenerationStatus("generating")
-    setStoryPrompt(prompt)
 
     startTransition(async () => {
       console.log(`handleSubmit(): generating a clap using prompt = "${prompt}" `)
 
       let clap: ClapProject | undefined = undefined
       try {
-        setProgress(0)
-        clap = await createClap({ prompt })
+        setProgress(5)
+
+        setStatus("generating")
+        setStoryGenerationStatus("generating")
+        setStoryPrompt(promptDraft.current)
+
+        clap = await createClap({ prompt: promptDraft.current })
 
         if (!clap) { throw new Error(`failed to create the clap`) }
 
@@ -87,9 +89,10 @@ export function Main() {
 
       // TODO Julian
       console.log("handleSubmit(): TODO Julian: generate images in parallel of the dialogue using Promise.all()")
-
+      // this is not trivial to do btw, since we will have to merge the clap together
+      // (this could be a helper function inside @aitube/clap)
       try {
-        setProgress(5)
+        setProgress(25)
         setImageGenerationStatus("generating")
         clap = await editClapStoryboards({ clap })
 
@@ -110,7 +113,7 @@ export function Main() {
 
       
       try {
-        setProgress(8)
+        setProgress(50)
         setVoiceGenerationStatus("generating")
         clap = await editClapDialogues({ clap })
 
@@ -131,7 +134,7 @@ export function Main() {
 
       let assetUrl = ""
       try {
-        setProgress(50)
+        setProgress(75)
         setVideoGenerationStatus("generating")
         assetUrl = await exportClapToVideo({ clap })
 
@@ -280,6 +283,7 @@ export function Main() {
                       // disabled={modelState != 'ready'}
                       onChange={(e) => {
                         setStoryPromptDraft(e.target.value)
+                        promptDraft.current = e.target.value
                       }}
                       placeholder="Yesterday I was at my favorite pizza place and.."
                       inputClassName="
@@ -334,18 +338,7 @@ export function Main() {
                     text-stone-900/90 dark:text-stone-100/90
                     text-sm md:text-base lg:text-lg
                     w-full text-right">
-                    {isBusy
-                      ? (
-                        storyGenerationStatus === "generating" ? "Enhancing the story.."
-                        : imageGenerationStatus === "generating" ? "Generating storyboards.."
-                        : voiceGenerationStatus === "generating" ? "Generating voices.."
-                        : videoGenerationStatus === "generating" ? "Assembling final video.."
-                        : "Please wait.."
-                      )
-                      : status === "error"
-                      ? <span>{error || ""}</span>
-                      : <span>&nbsp;</span> // to prevent layout changes
-                     }
+                   
                     </div>
                   </div>
                 </CardContent>
@@ -381,7 +374,21 @@ export function Main() {
                   {isBusy ? <div className="
                   flex flex-col 
                   items-center justify-center
-                  text-2xl text-center font-bold">{progress}%</div>
+                  text-center space-y-1.5">
+                    <p className="text-2xl font-bold">{progress}%</p> 
+                    <p className="text-base text-white/70">{isBusy
+                      ? (
+                        storyGenerationStatus === "generating" ? "Enhancing the story.."
+                        : imageGenerationStatus === "generating" ? "Generating storyboards.."
+                        : voiceGenerationStatus === "generating" ? "Generating voices.."
+                        : videoGenerationStatus === "generating" ? "Assembling final video.."
+                        : "Please wait.."
+                      )
+                      : status === "error"
+                      ? <span>{error || ""}</span>
+                      : <span>&nbsp;</span> // to prevent layout changes
+                     }</p>
+                    </div>
                   : generatedVideo ? <video
                     src={generatedVideo}
                     controls
@@ -403,6 +410,7 @@ export function Main() {
         </div>
 
         <div className="
+        absolute bottom-0 right-0
         flex flex-row items-center justify-end
         w-full p-6
         font-sans">

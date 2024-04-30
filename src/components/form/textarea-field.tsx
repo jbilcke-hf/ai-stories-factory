@@ -31,10 +31,10 @@ export function TextareaField({
       rounded-lg md:rounded-xl lg:rounded-2xl
       border-2
       
-      bg-stone-800/90 text-amber-400/100
-      dark:bg-stone-800/90 dark:text-amber-400/100
+      bg-stone-800/60 text-amber-400/100
+      dark:bg-stone-800/60 dark:text-amber-400/100
 
-      border-stone-800/80 dark:border-stone-800/80
+      border-stone-900/80 dark:border-stone-900/80
       outline-stone-800/80 dark:outline-stone-800/80
       ring-stone-800/80 dark:ring-stone-800/80
       ring-offset-stone-800/0 dark:ring-offset-stone-800/0
