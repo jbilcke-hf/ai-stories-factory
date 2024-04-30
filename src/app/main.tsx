@@ -349,7 +349,7 @@ export function Main() {
             `flex-1 h-full`,
             // `transition-all duration-200 ease-in-out`
 
-            `-mt-[100px] -mb-[90px] md:-mt-0 md:-mb-0`,
+            `-mt-[20px] -mb-[90px] md:-mt-0 md:-mb-0`,
           )}>
             
             <div className={cn(`
