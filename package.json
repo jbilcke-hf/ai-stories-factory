@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aitube/clap": "0.0.7",
-    "@aitube/client": "0.0.8",
+    "@aitube/clap": "0.0.10",
+    "@aitube/client": "0.0.12",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
