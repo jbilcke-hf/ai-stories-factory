@@ -14,8 +14,10 @@ export async function createClap({
     prompt,
 
     // the vertical video look 🤳
+    // initially I used 1024x512 (a 2:1 ratio)
+    // but that is a bit too extreme, most phones only take 16:9
     height: 1024,
-    width: 512,
+    width: 576,
 
     token: await getToken()
   })
