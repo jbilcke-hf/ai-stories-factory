@@ -361,9 +361,9 @@ export function Main() {
                 device="Nexus 5"
                 // color="black"
 
-                // note: videos are generated in 512x1024
+                // note: videos are generated in 576
                 // so we need to keep the same ratio here
-                width={256}
+                width={288}
                 height={512}
               >
                 <div className="
