@@ -58,7 +58,7 @@ export function Main() {
   const handleSubmit = async () => {
 
     startTransition(async () => {
-      console.log(`handleSubmit(): generating a clap using prompt = "${prompt}" `)
+      console.log(`handleSubmit(): generating a clap using prompt = "${promptDraft.current}" `)
 
       let clap: ClapProject | undefined = undefined
       try {
