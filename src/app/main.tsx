@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Field } from '@/components/form/field'
 import { Label } from '@/components/form/label'
 import { VideoOrientation } from './types'
+import { getParam } from '@/lib/utils/getParam'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -58,6 +59,8 @@ export function Main() {
   const setProgress = useStore(s => s.setProgress)
   const saveClap = useStore(s => s.saveClap)
   const loadClap = useStore(s => s.loadClap)
+
+  const canSeeBetaFeatures = getParam<boolean>("beta", false)
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
@@ -390,7 +393,7 @@ export function Main() {
                       </Button>
                     */}
 
-                    {/*
+                    {canSeeBetaFeatures ?
                     <Button
                       onClick={() => saveClap()}
                       disabled={!currentClap || isBusy}
@@ -403,12 +406,10 @@ export function Main() {
                         storyPromptDraft ? "opacity-100" : "opacity-80"
                       )}
                     >
-                     <span className="mr-1">Save preset</span>
-                    </Button>
-                    */}
-                    <div></div>
+                     <span className="mr-1">Save project</span>
+                    </Button> : <div></div>
+                    }
   
-
                     <div className=" 
                     flex flex-row
                     justify-between items-center
