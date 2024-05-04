@@ -1,8 +1,10 @@
 "use client"
 
-import React, { useRef, useTransition } from 'react'
+import React, { useEffect, useRef, useTransition } from 'react'
+import { IoMdPhoneLandscape, IoMdPhonePortrait } from 'react-icons/io'
 import { ClapProject } from '@aitube/clap'
-import Image from "next/image"
+import Image from 'next/image'
+import { useFilePicker } from 'use-file-picker'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
 
@@ -19,6 +21,11 @@ import { exportClapToVideo } from './server/aitube/exportClapToVideo'
 
 import { useStore } from './store'
 import HFLogo from "./hf-logo.svg"
+import { fileToBase64 } from '@/lib/base64/fileToBase64'
+import { Input } from '@/components/ui/input'
+import { Field } from '@/components/form/field'
+import { Label } from '@/components/form/label'
+import { VideoOrientation } from './types'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -26,26 +33,31 @@ export function Main() {
   const promptDraft = useRef("")
   promptDraft.current = storyPromptDraft
   const storyPrompt = useStore(s => s.storyPrompt)
+  const orientation = useStore(s => s.orientation)
   const status = useStore(s => s.status)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
   const imageGenerationStatus = useStore(s => s.imageGenerationStatus)
   const videoGenerationStatus = useStore(s => s.videoGenerationStatus)
-  const generatedClap = useStore(s => s.generatedClap)
-  const generatedVideo = useStore(s => s.generatedVideo)
+  const currentClap = useStore(s => s.currentClap)
+  const currentVideo = useStore(s => s.currentVideo)
+  const currentVideoOrientation = useStore(s => s.currentVideoOrientation)
   const setStoryPromptDraft = useStore(s => s.setStoryPromptDraft)
   const setStoryPrompt = useStore(s => s.setStoryPrompt)
   const setStatus = useStore(s => s.setStatus)
+  const toggleOrientation = useStore(s => s.toggleOrientation)
   const error = useStore(s => s.error)
   const setError = useStore(s => s.setError)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
-  const setGeneratedClap = useStore(s => s.setGeneratedClap)
+  const setCurrentClap = useStore(s => s.setCurrentClap)
   const setGeneratedVideo = useStore(s => s.setGeneratedVideo)
   const progress = useStore(s => s.progress)
   const setProgress = useStore(s => s.setProgress)
+  const saveClap = useStore(s => s.saveClap)
+  const loadClap = useStore(s => s.loadClap)
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
@@ -55,6 +67,28 @@ export function Main() {
 
   const isBusy = status === "generating" || hasPendingTasks
 
+
+  const { openFilePicker, filesContent, loading } = useFilePicker({
+    accept: '.clap',
+    readAs: "ArrayBuffer"
+  })
+
+  const fileData = filesContent[0]
+
+  useEffect(() => {
+    const fn = async () => {
+      if (fileData?.name) {
+        try {
+          const blob = new Blob([fileData.content])
+          await loadClap(blob, fileData.name)
+        } catch (err) {
+          console.error("failed to load the Clap file:", err)
+        }
+      }
+    }
+    fn()
+  }, [fileData?.name])
+  
   const handleSubmit = async () => {
 
     startTransition(async () => {
@@ -68,14 +102,17 @@ export function Main() {
         setStoryGenerationStatus("generating")
         setStoryPrompt(promptDraft.current)
 
-        clap = await createClap({ prompt: promptDraft.current })
+        clap = await createClap({
+          prompt: promptDraft.current,
+          orientation: useStore.getState().orientation,
+        })
 
         if (!clap) { throw new Error(`failed to create the clap`) }
 
         if (clap.segments.length <= 1) { throw new Error(`failed to generate more than one segments`) }
 
         console.log(`handleSubmit(): received a clap = `, clap)
-        setGeneratedClap(clap)
+        setCurrentClap(clap)
         setStoryGenerationStatus("finished")
       } catch (err) {
         setStoryGenerationStatus("error")
@@ -99,7 +136,7 @@ export function Main() {
         if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
         console.log(`handleSubmit(): received a clap with images = `, clap)
-        setGeneratedClap(clap)
+        setCurrentClap(clap)
         setImageGenerationStatus("finished")
       } catch (err) {
         setImageGenerationStatus("error")
@@ -120,7 +157,7 @@ export function Main() {
         if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
         console.log(`handleSubmit(): received a clap with dialogues = `, clap)
-        setGeneratedClap(clap)
+        setCurrentClap(clap)
         setVoiceGenerationStatus("finished")
       } catch (err) {
         setVoiceGenerationStatus("error")
@@ -139,6 +176,7 @@ export function Main() {
         assetUrl = await exportClapToVideo({ clap })
 
         console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
+
         setVideoGenerationStatus("finished")
       } catch (err) {
         setVideoGenerationStatus("error")
@@ -155,6 +193,12 @@ export function Main() {
       setError("")
     })
   }
+
+  // note: we are interested in the *current* video orientation,
+  // not the requested video orientation requested for the next video
+  const isLandscape = currentVideoOrientation === VideoOrientation.LANDSCAPE
+  const isPortrait = currentVideoOrientation === VideoOrientation.PORTRAIT
+  const isSquare = currentVideoOrientation === VideoOrientation.SQUARE
 
   return (
     <div className={cn(
@@ -269,42 +313,70 @@ export function Main() {
                       pt-2 md:pt-4
                       "
                       style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
-                    >Make vertical video stories using AI ✨</p>
+                    >Make video stories using AI ✨</p>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-col">
-                  <div className="
-                  flex flex-col
-                  transition-all duration-200 ease-in-out
-                  space-y-2 md:space-y-4 mt-0
-                  ">
-                    <TextareaField
-                      // label="My story:"
-                      // disabled={modelState != 'ready'}
-                      onChange={(e) => {
-                        setStoryPromptDraft(e.target.value)
-                        promptDraft.current = e.target.value
-                      }}
-                      placeholder="Yesterday I was at my favorite pizza place and.."
-                      inputClassName="
-                      transition-all duration-200 ease-in-out
-                      h-32 md:h-56 lg:h-64
-                      "
-                      disabled={isBusy}
-                      value={storyPromptDraft}
-                    />
-                </div>
-                <div className="flex-flex-row space-y-3 pt-4">
-                  <div className="flex flex-row justify-end items-center">
+                <CardContent
+                  className="flex flex-col space-y-3"
+                  >
+                  
+                  {/* LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
+                  <div className="flex flex-row space-x-3 w-full">
+                  
+                 
+                    {/*
                     <div className="
+                      flex flex-col
+                      
+                      w-32 bg-yellow-600
+                      transition-all duration-200 ease-in-out
+                      space-y-2 md:space-y-4
+                    ">
+                      put menu here
+                    </div>
+                    */}
+
+                    {/* MAIN PROMPT INPUT */}
+                    <div className="
+                      flex flex-col
+                      flex-1
+                      transition-all duration-200 ease-in-out
+                      space-y-2 md:space-y-4
+                    ">
+                      <TextareaField
+                        // label="My story:"
+                        // disabled={modelState != 'ready'}
+                        onChange={(e) => {
+                          setStoryPromptDraft(e.target.value)
+                          promptDraft.current = e.target.value
+                        }}
+                        placeholder="Yesterday I was at my favorite pizza place and.."
+                        inputClassName="
+                        transition-all duration-200 ease-in-out
+                        h-32 md:h-56 lg:h-64
+                        "
+                        disabled={isBusy}
+                        value={storyPromptDraft}
+                      />
+                    
+                    {/* END OF MAIN PROMPT INPUT */}
+                    </div>
+
+                    {/* END OF LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
+                  </div>
+
+                  {/* ACTION BAR */}
+
+                  <div className="
                     w-full
                     flex flex-row
-                    justify-end items-center
+                    justify-between items-center
                     space-x-3">
-                      {/*
+              
+                    {/*
                       <Button
-                        onClick={handleSubmit}
-                        disabled={!storyPromptDraft || isBusy || !generatedClap}
+                        onClick={() => load()}
+                        disabled={isBusy}
                         // variant="ghost"
                         className={cn(
                           `text-sm md:text-base lg:text-lg`,
@@ -314,10 +386,57 @@ export function Main() {
                           storyPromptDraft ? "opacity-100" : "opacity-80"
                         )}
                       >
-                       <span className="mr-1">Save</span>
+                       <span className="mr-1">Load project</span>
                       </Button>
-                      */}
+                    */}
 
+                    {/*
+                    <Button
+                      onClick={() => saveClap()}
+                      disabled={!currentClap || isBusy}
+                      // variant="ghost"
+                      className={cn(
+                        `text-sm md:text-base lg:text-lg`,
+                        `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                        `font-bold`,
+                        `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                        storyPromptDraft ? "opacity-100" : "opacity-80"
+                      )}
+                    >
+                     <span className="mr-1">Save preset</span>
+                    </Button>
+                    */}
+                    <div></div>
+  
+
+                    <div className=" 
+                    flex flex-row
+                    justify-between items-center
+                    space-x-3
+                    select-none
+                    ">
+                      {/* ORIENTATION SWITCH */}
+                      <div className=" 
+                      flex flex-row
+                      justify-between items-center
+                      cursor-pointer
+                      "
+                      onClick={() => toggleOrientation()}>
+                        <div>Orientation:</div>
+                        <div className="
+                        w-10 h-10
+                        flex flex-row items-center justify-center
+                        "
+                        >
+                          <div className={cn(
+                            `transition-all duration-200 ease-in-out`,
+                            orientation === VideoOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
+                          )}>
+                            <IoMdPhonePortrait size={24} />
+                          </div>
+                        </div>
+                      </div>
+                      {/* END OF ORIENTATION SWITCH */}
                       <Button
                         onClick={handleSubmit}
                         disabled={!storyPromptDraft || isBusy}
@@ -330,19 +449,15 @@ export function Main() {
                           storyPromptDraft ? "opacity-100" : "opacity-80"
                         )}
                       >
-                       <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
+                      <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
                       </Button>
                     </div>
+
+                  {/* END OF ACTION BAR */}
                   </div>
-                    <div className="
-                    text-stone-900/90 dark:text-stone-100/90
-                    text-sm md:text-base lg:text-lg
-                    w-full text-right">
-                   
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+              </CardContent>
+            </Card>
           </div>
           <div className={cn(
             `flex flex-col items-center justify-center`,
@@ -353,16 +468,25 @@ export function Main() {
           )}>
             
             <div className={cn(`
-              -mt-24 md:mt-0
+              -mt-8 md:mt-0
               transition-all duration-200 ease-in-out
-              scale-[0.7] md:scale-[0.9] lg:scale-[1.2]
-            `)}>
+            `,
+             isLandscape
+              ? `scale-[0.9] md:scale-[0.75] lg:scale-[0.9] xl:scale-[1.0] 2xl:scale-[1.1]`
+              : `scale-[0.8] md:scale-[0.9] lg:scale-[1.1]`
+              )}>
               <DeviceFrameset
                 device="Nexus 5"
                 // color="black"
 
-                // note: videos are generated in 576
+                landscape={isLandscape}
+
+                // note 1: videos are generated in 1024x576 or 576x1024
                 // so we need to keep the same ratio here
+
+                // note 2: width and height are fixed, if width always stays 512
+                // that's because the landscape={} parameter will do the switch for us
+
                 width={288}
                 height={512}
               >
@@ -389,12 +513,14 @@ export function Main() {
                       : <span>&nbsp;</span> // to prevent layout changes
                      }</p>
                     </div>
-                  : generatedVideo ? <video
-                    src={generatedVideo}
+                  : currentVideo ? <video
+                    src={currentVideo}
                     controls
-                    autoPlay
                     playsInline
-                    muted
+                    // I think we can't autoplay with sound,
+                    // so let's disable auto-play
+                    // autoPlay
+                    // muted
                     loop
                     className="object-cover"
                     style={{
@@ -404,26 +530,31 @@ export function Main() {
                   items-center justify-center
                   text-lg text-center"></div>}
                 </div>
+
+                <div className={cn(`
+                  fixed
+                  flex flex-row items-center justify-center
+                  bg-transparent
+                  font-sans
+                  -mb-0
+                  `,
+                  isLandscape ? 'h-4' : 'h-16'
+                 )}
+                  style={{ width: isPortrait ? 288 : 512 }}>
+                  <span className="text-stone-100/50 text-4xs"
+                    style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>
+                    Powered by
+                  </span>
+                  <span className="ml-1 mr-0.5">
+                    <Image src={HFLogo} alt="Hugging Face" width="14" height="14" />
+                  </span>
+                  <span className="text-stone-100/80 text-3xs font-semibold"
+                    style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>Hugging Face</span>
+            
+                </div>
               </DeviceFrameset>
             </div>
           </div>
-        </div>
-
-        <div className="
-        md:absolute md:bottom-0 md:right-0
-        flex flex-row items-center justify-end
-        w-full p-6
-        font-sans">
-          <span className="text-stone-950/60 text-2xs"
-            style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>
-            Powered by
-          </span>
-          <span className="ml-1.5 mr-1">
-            <Image src={HFLogo} alt="Hugging Face" width="16" height="16" />
-          </span>
-          <span className="text-stone-950/60 text-xs font-bold"
-            style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}>Hugging Face</span>
-    
         </div>
       </div>
       <Toaster />

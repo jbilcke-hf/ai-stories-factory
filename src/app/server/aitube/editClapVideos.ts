@@ -1,7 +1,7 @@
 "use server"
 
 import { ClapProject } from "@aitube/clap"
-import { editClapVideos as apiEditClapVideos } from "@aitube/client"
+import { editClapVideos as apiEditClapVideos, ClapCompletionMode } from "@aitube/client"
 
 import { getToken } from "./getToken"
 
@@ -12,6 +12,7 @@ export async function editClapVideos({
 }): Promise<ClapProject> {
   const newClap: ClapProject = await apiEditClapVideos({
     clap,
+    completionMode: ClapCompletionMode.FULL,
     token: await getToken()
   })
 
