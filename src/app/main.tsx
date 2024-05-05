@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useTransition } from 'react'
-import { IoMdPhoneLandscape, IoMdPhonePortrait } from 'react-icons/io'
+import { IoMdPhonePortrait } from 'react-icons/io'
 import { ClapProject } from '@aitube/clap'
 import Image from 'next/image'
 import { useFilePicker } from 'use-file-picker'
@@ -15,6 +15,7 @@ import { TextareaField } from '@/components/form/textarea-field'
 import { cn } from '@/lib/utils/cn'
 
 import { createClap } from './server/aitube/createClap'
+import { editClapEntities } from './server/aitube/editClapEntities'
 import { editClapDialogues } from './server/aitube/editClapDialogues'
 import { editClapStoryboards } from './server/aitube/editClapStoryboards'
 import { exportClapToVideo } from './server/aitube/exportClapToVideo'
@@ -34,9 +35,12 @@ export function Main() {
   const promptDraft = useRef("")
   promptDraft.current = storyPromptDraft
   const storyPrompt = useStore(s => s.storyPrompt)
+  const mainCharacterImage = useStore(s => s.mainCharacterImage)
+  const mainCharacterVoice = useStore(s => s.mainCharacterVoice)
   const orientation = useStore(s => s.orientation)
   const status = useStore(s => s.status)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
+  const assetGenerationStatus = useStore(s => s.assetGenerationStatus)
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
   const imageGenerationStatus = useStore(s => s.imageGenerationStatus)
   const videoGenerationStatus = useStore(s => s.videoGenerationStatus)
@@ -45,11 +49,14 @@ export function Main() {
   const currentVideoOrientation = useStore(s => s.currentVideoOrientation)
   const setStoryPromptDraft = useStore(s => s.setStoryPromptDraft)
   const setStoryPrompt = useStore(s => s.setStoryPrompt)
+  const setMainCharacterImage = useStore(s => s.setMainCharacterImage)
+  const setMainCharacterVoice = useStore(s => s.setMainCharacterVoice)
   const setStatus = useStore(s => s.setStatus)
   const toggleOrientation = useStore(s => s.toggleOrientation)
   const error = useStore(s => s.error)
   const setError = useStore(s => s.setError)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
+  const setAssetGenerationStatus = useStore(s => s.setAssetGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
@@ -64,6 +71,7 @@ export function Main() {
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
+    assetGenerationStatus === "generating" ||
     voiceGenerationStatus === "generating" ||
     imageGenerationStatus === "generating" ||
     videoGenerationStatus === "generating"
@@ -99,7 +107,7 @@ export function Main() {
 
       let clap: ClapProject | undefined = undefined
       try {
-        setProgress(5)
+        setProgress(1)
 
         setStatus("generating")
         setStoryGenerationStatus("generating")
@@ -127,12 +135,53 @@ export function Main() {
         return
       }
 
+      console.log("-------- GENERATED STORY --------")
+      console.table(clap.segments, [
+        // 'startTimeInMs',
+        'endTimeInMs',
+        // 'track',
+        'category',
+        'prompt'
+      ])
+
+ 
+      try {
+        setProgress(10)
+        setAssetGenerationStatus("generating")
+        clap = await editClapEntities({ clap })
+
+        if (!clap) { throw new Error(`failed to edit the entities`) }
+
+        console.log(`handleSubmit(): received a clap with entities = `, clap)
+        setCurrentClap(clap)
+        setAssetGenerationStatus("finished")
+      } catch (err) {
+        setAssetGenerationStatus("error")
+        setStatus("error")
+        setError(`${err}`)
+        return
+      }
+      if (!clap) {
+        return
+      }
+      
+
+      /*
+      if (mainCharacterImage) {
+        console.log("handleSubmit(): User specified a main character image")
+        // various strategies here, for instance we can assume that the first character is the main character,
+        // or maybe a more reliable way is to count the number of occurrences.
+        // there is a risk of misgendering, so ideally we should add some kind of UI to do this,
+        // such as a list of characters.
+      }
+      */
+
       // TODO Julian
       console.log("handleSubmit(): TODO Julian: generate images in parallel of the dialogue using Promise.all()")
       // this is not trivial to do btw, since we will have to merge the clap together
       // (this could be a helper function inside @aitube/clap)
       try {
-        setProgress(25)
+        setProgress(40)
         setImageGenerationStatus("generating")
         clap = await editClapStoryboards({ clap })
 
@@ -153,7 +202,7 @@ export function Main() {
 
       
       try {
-        setProgress(50)
+        setProgress(60)
         setVoiceGenerationStatus("generating")
         clap = await editClapDialogues({ clap })
 
@@ -174,7 +223,7 @@ export function Main() {
 
       let assetUrl = ""
       try {
-        setProgress(75)
+        setProgress(80)
         setVideoGenerationStatus("generating")
         assetUrl = await exportClapToVideo({ clap })
 
@@ -328,6 +377,9 @@ export function Main() {
                   
                  
                     {/*
+
+                    TODO: To finish by Julian a bit later
+
                     <div className="
                       flex flex-col
                       
@@ -335,7 +387,18 @@ export function Main() {
                       transition-all duration-200 ease-in-out
                       space-y-2 md:space-y-4
                     ">
-                      put menu here
+                       <Input
+                          type="file"
+                          className=""
+                          onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              const file = e.target.files[0];
+                              const newImageBase64 = await fileToBase64(file)
+                              setMainCharacterImage(newImageBase64)
+                            }
+                          }}
+                          accept="image/*"
+                        />
                     </div>
                     */}
 
@@ -504,6 +567,7 @@ export function Main() {
                     <p className="text-base text-white/70">{isBusy
                       ? (
                         storyGenerationStatus === "generating" ? "Enhancing the story.."
+                        : assetGenerationStatus === "generating" ? "Creating characters.."
                         : imageGenerationStatus === "generating" ? "Generating storyboards.."
                         : voiceGenerationStatus === "generating" ? "Generating voices.."
                         : videoGenerationStatus === "generating" ? "Assembling final video.."

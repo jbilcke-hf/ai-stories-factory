@@ -20,6 +20,7 @@ export const useStore = create<{
 
   status: GlobalStatus
   storyGenerationStatus: TaskStatus
+  assetGenerationStatus: TaskStatus
   voiceGenerationStatus: TaskStatus
   imageGenerationStatus: TaskStatus
   videoGenerationStatus: TaskStatus
@@ -39,6 +40,7 @@ export const useStore = create<{
   setStoryPrompt: (storyPrompt: string) => void
   setStatus: (status: GlobalStatus) => void
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => void
+  setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => void
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
@@ -59,6 +61,7 @@ export const useStore = create<{
   orientation: VideoOrientation.PORTRAIT,
   status: "idle",
   storyGenerationStatus: "idle",
+  assetGenerationStatus: "idle",
   voiceGenerationStatus: "idle",
   imageGenerationStatus: "idle",
   videoGenerationStatus: "idle",
@@ -91,6 +94,7 @@ export const useStore = create<{
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => { set({ status }) },
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => { set({ storyGenerationStatus }) },
+  setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => { set({ assetGenerationStatus }) },
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => { set({ voiceGenerationStatus }) },
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => { set({ imageGenerationStatus }) },
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => { set({ videoGenerationStatus }) },

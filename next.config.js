@@ -4,7 +4,8 @@ const nextConfig = {
 
   experimental: {
     serverActions: {
-      bodySizeLimit: '16mb'
+      // a clap file can be quite large - but that's OK
+      bodySizeLimit: '32mb'
     }
   }
 }
