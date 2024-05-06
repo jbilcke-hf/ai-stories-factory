@@ -39,6 +39,7 @@ export function Main() {
   const mainCharacterVoice = useStore(s => s.mainCharacterVoice)
   const orientation = useStore(s => s.orientation)
   const status = useStore(s => s.status)
+  const parseGenerationStatus = useStore(s => s.parseGenerationStatus)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
   const assetGenerationStatus = useStore(s => s.assetGenerationStatus)
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
@@ -55,6 +56,7 @@ export function Main() {
   const toggleOrientation = useStore(s => s.toggleOrientation)
   const error = useStore(s => s.error)
   const setError = useStore(s => s.setError)
+  const setParseGenerationStatus = useStore(s => s.setParseGenerationStatus)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
   const setAssetGenerationStatus = useStore(s => s.setAssetGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
@@ -78,24 +80,93 @@ export function Main() {
 
   const isBusy = status === "generating" || hasPendingTasks
 
-
-  const { openFilePicker, filesContent, loading } = useFilePicker({
+  const { openFilePicker, filesContent } = useFilePicker({
     accept: '.clap',
     readAs: "ArrayBuffer"
   })
-
   const fileData = filesContent[0]
 
   useEffect(() => {
     const fn = async () => {
-      if (fileData?.name) {
-        try {
-          const blob = new Blob([fileData.content])
-          await loadClap(blob, fileData.name)
-        } catch (err) {
-          console.error("failed to load the Clap file:", err)
-        }
+      if (!fileData?.name) { return }
+
+      const {
+        setStatus,
+        setProgress,
+        setParseGenerationStatus,
+        setVideoGenerationStatus,
+        setGeneratedVideo
+      } = useStore.getState()
+
+      let clap: ClapProject | undefined = undefined
+
+      setStatus("generating")
+      setProgress(25)
+      setParseGenerationStatus("generating")
+
+      try {
+        const blob = new Blob([fileData.content])
+        clap = await loadClap(blob, fileData.name)
+      } catch (err) {
+        console.error("failed to load the Clap file:", err)
+        setError(`${err}`)
       }
+
+      if (!clap) {
+        setParseGenerationStatus("error")
+        setStatus("error")
+        setProgress(0)
+        return
+      }
+
+      setParseGenerationStatus("finished")
+
+      try {
+        setProgress(60)
+        setVoiceGenerationStatus("generating")
+        clap = await editClapDialogues({ clap })
+
+        if (!clap) { throw new Error(`failed to edit the dialogues`) }
+
+        console.log(`handleSubmit(): received a clap with dialogues = `, clap)
+        setCurrentClap(clap)
+        setVoiceGenerationStatus("finished")
+      } catch (err) {
+        setVoiceGenerationStatus("error")
+        setStatus("error")
+        setError(`${err}`)
+        return
+      }
+      if (!clap) {
+        return
+      }
+
+      setVideoGenerationStatus("generating")
+  
+      let assetUrl = ""
+      try {
+        assetUrl = await exportClapToVideo({ clap })
+      } catch (err) {
+        console.error("failed to render the Clap file:", err)
+        setError(`${err}`)
+      }
+    
+      if (!assetUrl) {
+        setVideoGenerationStatus("error")
+        setStatus("error")
+        setProgress(0)
+        return
+      }
+
+      setVideoGenerationStatus("finished")
+
+      setProgress(80)
+  
+      console.log(`loadClap(): generated a video: ${assetUrl.slice(0, 60)}...`)
+    
+      setGeneratedVideo(assetUrl)
+      setStatus("finished")
+      setError("")
     }
     fn()
   }, [fileData?.name])
@@ -456,6 +527,29 @@ export function Main() {
                       </Button>
                     */}
 
+                    <div className="
+               
+                    flex flex-row
+                    justify-between items-center
+                    space-x-3">
+                    {canSeeBetaFeatures ?
+                    <Button
+                      onClick={openFilePicker}
+                      disabled={isBusy}
+                      // variant="ghost"
+                      className={cn(
+                        `text-sm md:text-base lg:text-lg`,
+                        `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                        `font-bold`,
+                        `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                        storyPromptDraft ? "opacity-100" : "opacity-80"
+                      )}
+                    >
+                      <span className="hidden xl:inline mr-1">Load project</span>
+                      <span className="inline xl:hidden mr-1">Load</span>
+                    </Button> : <div></div>
+                    }
+  
                     {canSeeBetaFeatures ?
                     <Button
                       onClick={() => saveClap()}
@@ -469,9 +563,11 @@ export function Main() {
                         storyPromptDraft ? "opacity-100" : "opacity-80"
                       )}
                     >
-                     <span className="mr-1">Save project</span>
+                      <span className="hidden xl:inline mr-1">Save project</span>
+                      <span className="inline xl:hidden mr-1">Save</span>
                     </Button> : <div></div>
                     }
+                    </div>
   
                     <div className=" 
                     flex flex-row
@@ -486,9 +582,12 @@ export function Main() {
                       cursor-pointer
                       "
                       onClick={() => toggleOrientation()}>
-                        <div>Orientation:</div>
+                        <div>
+                        <span className="hidden xl:inline mr-1">Orientation:</span>
+                        <span className="inline xl:hidden mr-1"></span>
+                        </div>
                         <div className="
-                        w-10 h-10
+                        w-8 h-8
                         flex flex-row items-center justify-center
                         "
                         >
@@ -506,7 +605,7 @@ export function Main() {
                         disabled={!storyPromptDraft || isBusy}
                         // variant="ghost"
                         className={cn(
-                          `text-lg md:text-xl lg:text-2xl`,
+                          `text-base md:text-lg lg:text-xl xl:text-2xl`,
                           `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
                           `font-bold`,
                           `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
@@ -566,10 +665,11 @@ export function Main() {
                     <p className="text-2xl font-bold">{progress}%</p> 
                     <p className="text-base text-white/70">{isBusy
                       ? (
-                        storyGenerationStatus === "generating" ? "Enhancing the story.."
-                        : assetGenerationStatus === "generating" ? "Creating characters.."
-                        : imageGenerationStatus === "generating" ? "Generating storyboards.."
-                        : voiceGenerationStatus === "generating" ? "Generating voices.."
+                        storyGenerationStatus === "generating" ? "Writing the story.."
+                        : parseGenerationStatus === "generating" ? "Loading the project.."
+                        : assetGenerationStatus === "generating" ? "Casting characters.."
+                        : imageGenerationStatus === "generating" ? "Creating storyboards.."
+                        : voiceGenerationStatus === "generating" ? "Recording voices.."
                         : videoGenerationStatus === "generating" ? "Assembling final video.."
                         : "Please wait.."
                       )
@@ -603,7 +703,7 @@ export function Main() {
                   font-sans
                   -mb-0
                   `,
-                  isLandscape ? 'h-4' : 'h-16'
+                  isLandscape ? 'h-4' : 'h-14'
                  )}
                   style={{ width: isPortrait ? 288 : 512 }}>
                   <span className="text-stone-100/50 text-4xs"

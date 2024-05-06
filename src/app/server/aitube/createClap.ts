@@ -4,12 +4,9 @@ import { ClapProject } from "@aitube/clap"
 import { createClap as apiCreateClap } from "@aitube/client"
 
 import { VideoOrientation } from "../../types"
-import { getToken } from "./getToken"
 
-// initially I used 1024x512 (a 2:1 ratio)
-// but that is a bit too extreme, most phones only take 16:9
-const RESOLUTION_LONG = 1024
-const RESOLUTION_SHORT = 576
+import { getToken } from "./getToken"
+import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./config"
 
 export async function createClap({
   prompt = "",

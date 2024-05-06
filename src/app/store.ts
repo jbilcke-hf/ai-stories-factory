@@ -4,9 +4,11 @@ import { ClapProject, parseClap, serializeClap } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GlobalStatus, TaskStatus } from "@/types"
+import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
+import { parseVideoOrientation } from "@/lib/utils/parseVideoOrientation"
 
 import { VideoOrientation } from "./types"
-import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
+import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
 
 export const useStore = create<{
   mainCharacterImage: string
@@ -19,6 +21,7 @@ export const useStore = create<{
   orientation: VideoOrientation
 
   status: GlobalStatus
+  parseGenerationStatus: TaskStatus
   storyGenerationStatus: TaskStatus
   assetGenerationStatus: TaskStatus
   voiceGenerationStatus: TaskStatus
@@ -39,6 +42,7 @@ export const useStore = create<{
   setStoryPromptDraft: (storyPromptDraft: string) => void
   setStoryPrompt: (storyPrompt: string) => void
   setStatus: (status: GlobalStatus) => void
+  setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => void
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => void
   setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => void
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
@@ -51,8 +55,8 @@ export const useStore = create<{
 
   setProgress: (progress: number) => void
   setError: (error: string) => void
-  saveClap: (fileName?: string) => Promise<void>
-  loadClap: (blob: Blob, fileName?: string) => Promise<void>
+  saveClap: () => Promise<void>
+  loadClap: (blob: Blob, fileName?: string) => Promise<ClapProject>
 }>((set, get) => ({
   mainCharacterImage: "",
   mainCharacterVoice: "",
@@ -60,6 +64,7 @@ export const useStore = create<{
   storyPrompt: "",
   orientation: VideoOrientation.PORTRAIT,
   status: "idle",
+  parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
   assetGenerationStatus: "idle",
   voiceGenerationStatus: "idle",
@@ -93,6 +98,7 @@ export const useStore = create<{
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => { set({ status }) },
+  setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => { set({ parseGenerationStatus }) },
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => { set({ storyGenerationStatus }) },
   setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => { set({ assetGenerationStatus }) },
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => { set({ voiceGenerationStatus }) },
@@ -109,8 +115,8 @@ export const useStore = create<{
   },
   setProgress: (progress: number) => { set({ progress }) },
   setError: (error: string) => { set({ error }) },
-  saveClap: async (fileName: string = "untitled_story.clap"): Promise<void> => {
-    const { currentClap } = get()
+  saveClap: async (): Promise<void> => {
+    const { currentClap , storyPrompt } = get()
 
     if (!currentClap) { throw new Error(`cannot save a clap.. if there is no clap`) }
 
@@ -123,7 +129,13 @@ export const useStore = create<{
     const anchor = document.createElement("a")
     anchor.href = objectUrl
 
-    anchor.download = fileName
+    const firstPartOfStoryPrompt = storyPrompt // .split(",").shift() || ""
+
+    const cleanStoryPrompt = firstPartOfStoryPrompt.replace(/([^a-z0-9, ]+)/gi, "_")
+
+    const cleanName = `${cleanStoryPrompt.slice(0, 50)}`
+
+    anchor.download = `${cleanName}.clap`
 
     document.body.appendChild(anchor) // Append to the body (could be removed once clicked)
     anchor.click() // Trigger the download
@@ -132,15 +144,34 @@ export const useStore = create<{
     URL.revokeObjectURL(objectUrl)
     document.body.removeChild(anchor)
   },
-  loadClap: async (blob: Blob, fileName: string = "untitled_story.clap"): Promise<void> => {
+  loadClap: async (blob: Blob, fileName: string = "untitled_story.clap"): Promise<ClapProject> => {
     if (!blob) {
       throw new Error(`missing blob`)
     }
 
-    const currentClap: ClapProject = await parseClap(blob)
+    const currentClap: ClapProject | undefined = await parseClap(blob)
+
+    if (!currentClap) { throw new Error(`failed to import the clap`) }
+
+
+    const storyPrompt = currentClap.meta.description.split("||").pop() || ""
+
+    // TODO: parseVideoOrientation should be put inside @aitube/clap (in the utils)
+    // const orientation = parseVideoOrientation(currentClap.meta.orientation)
+    // let's use the UI settings for now
+    const { orientation } = get()
+
+    currentClap.meta.height = orientation === VideoOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
+    currentClap.meta.width = orientation === VideoOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
 
     set({
       currentClap,
+      storyPrompt,
+      storyPromptDraft: storyPrompt,
+      orientation,
+      currentVideoOrientation: orientation,
     })
+
+    return currentClap
   },
 }))
