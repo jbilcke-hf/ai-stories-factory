@@ -68,7 +68,7 @@ export function Main() {
   const saveClap = useStore(s => s.saveClap)
   const loadClap = useStore(s => s.loadClap)
 
-  const canSeeBetaFeatures = getParam<boolean>("beta", false)
+  const canSeeBetaFeatures = true // getParam<boolean>("beta", false)
 
   const hasPendingTasks =
     storyGenerationStatus === "generating" ||
