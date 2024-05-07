@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
-import { ClapProject } from '@aitube/clap'
+import { ClapProject, ClapMediaOrientation } from '@aitube/clap'
 import Image from 'next/image'
 import { useFilePicker } from 'use-file-picker'
 import { DeviceFrameset } from 'react-device-frameset'
@@ -26,7 +26,6 @@ import { fileToBase64 } from '@/lib/base64/fileToBase64'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/form/field'
 import { Label } from '@/components/form/label'
-import { VideoOrientation } from './types'
 import { getParam } from '@/lib/utils/getParam'
 
 export function Main() {
@@ -319,9 +318,9 @@ export function Main() {
 
   // note: we are interested in the *current* video orientation,
   // not the requested video orientation requested for the next video
-  const isLandscape = currentVideoOrientation === VideoOrientation.LANDSCAPE
-  const isPortrait = currentVideoOrientation === VideoOrientation.PORTRAIT
-  const isSquare = currentVideoOrientation === VideoOrientation.SQUARE
+  const isLandscape = currentVideoOrientation === ClapMediaOrientation.LANDSCAPE
+  const isPortrait = currentVideoOrientation === ClapMediaOrientation.PORTRAIT
+  const isSquare = currentVideoOrientation === ClapMediaOrientation.SQUARE
 
   return (
     <div className={cn(
@@ -593,7 +592,7 @@ export function Main() {
                         >
                           <div className={cn(
                             `transition-all duration-200 ease-in-out`,
-                            orientation === VideoOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
+                            orientation === ClapMediaOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
                           )}>
                             <IoMdPhonePortrait size={24} />
                           </div>

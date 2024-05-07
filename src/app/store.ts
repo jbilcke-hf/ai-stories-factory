@@ -1,13 +1,11 @@
 "use client"
 
-import { ClapProject, parseClap, serializeClap } from "@aitube/clap"
+import { ClapProject, parseClap, serializeClap, ClapMediaOrientation } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GlobalStatus, TaskStatus } from "@/types"
 import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
-import { parseVideoOrientation } from "@/lib/utils/parseVideoOrientation"
 
-import { VideoOrientation } from "./types"
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
 
 export const useStore = create<{
@@ -18,7 +16,7 @@ export const useStore = create<{
 
   // the desired orientation for the next video
   // but this won't impact the actual orientation of the fake device container
-  orientation: VideoOrientation
+  orientation: ClapMediaOrientation
 
   status: GlobalStatus
   parseGenerationStatus: TaskStatus
@@ -32,11 +30,11 @@ export const useStore = create<{
 
   // orientation of the currently loaded video (which can be different from `orientation`)
   // it will impact the actual orientation of the fake device container
-  currentVideoOrientation: VideoOrientation
+  currentVideoOrientation: ClapMediaOrientation
   progress: number
   error: string
   toggleOrientation: () => void
-  setCurrentVideoOrientation: (currentVideoOrientation: VideoOrientation) => void
+  setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => void
   setMainCharacterImage: (mainCharacterImage: string) => void
   setMainCharacterVoice: (mainCharacterVoice: string) => void
   setStoryPromptDraft: (storyPromptDraft: string) => void
@@ -62,7 +60,7 @@ export const useStore = create<{
   mainCharacterVoice: "",
   storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
   storyPrompt: "",
-  orientation: VideoOrientation.PORTRAIT,
+  orientation: ClapMediaOrientation.PORTRAIT,
   status: "idle",
   parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
@@ -72,15 +70,15 @@ export const useStore = create<{
   videoGenerationStatus: "idle",
   currentClap: undefined,
   currentVideo: "",
-  currentVideoOrientation: VideoOrientation.PORTRAIT,
+  currentVideoOrientation: ClapMediaOrientation.PORTRAIT,
   progress: 0,
   error: "",
   toggleOrientation: () => {
     const { orientation: previousOrientation, currentVideoOrientation, currentVideo } = get()
     const orientation =
-      previousOrientation === VideoOrientation.LANDSCAPE
-      ? VideoOrientation.PORTRAIT
-      : VideoOrientation.LANDSCAPE
+      previousOrientation === ClapMediaOrientation.LANDSCAPE
+      ? ClapMediaOrientation.PORTRAIT
+      : ClapMediaOrientation.LANDSCAPE
 
     set({
       orientation,
@@ -92,7 +90,7 @@ export const useStore = create<{
         : orientation
     })
   },
-  setCurrentVideoOrientation: (currentVideoOrientation: VideoOrientation) => { set({ currentVideoOrientation }) },
+  setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => { set({ currentVideoOrientation }) },
   setMainCharacterImage: (mainCharacterImage: string) => { set({ mainCharacterImage }) },
   setMainCharacterVoice: (mainCharacterVoice: string) => { set({ mainCharacterVoice }) },
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
@@ -161,8 +159,8 @@ export const useStore = create<{
     // let's use the UI settings for now
     const { orientation } = get()
 
-    currentClap.meta.height = orientation === VideoOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
-    currentClap.meta.width = orientation === VideoOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
+    currentClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
+    currentClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
 
     set({
       currentClap,
