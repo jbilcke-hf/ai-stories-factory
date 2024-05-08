@@ -379,7 +379,7 @@ export function Main() {
       entities: 2200,
       images: 1000,
       voices: 2000,
-      video_export: 1500,
+      video_export: 2500,
       idle: 1000
     }
 
