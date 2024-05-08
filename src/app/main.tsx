@@ -220,7 +220,10 @@ export function Main() {
         setAssetGenerationStatus("generating")
         clap = await editClapEntities({
           clap,
-          turbo: true,
+
+          // generating entities requires a "smart" LLM
+          turbo: false,
+          // turbo: true,
         })
 
         if (!clap) { throw new Error(`failed to edit the entities`) }
@@ -372,8 +375,8 @@ export function Main() {
     // approximate time in ms take by each step
     // also we should find adjust the % displayed
     const progressDelayInMsPerStage: Record<GenerationStage, number> = {
-      story: 2000,
-      entities: 2000,
+      story: 2200,
+      entities: 2200,
       images: 1000,
       voices: 2000,
       video_export: 1500,
