@@ -7,15 +7,18 @@ import { getToken } from "./getToken"
 
 export async function editClapEntities({
   clap,
-  entityPrompts = []
+  entityPrompts = [],
+  turbo = false,
 }: {
   clap: ClapProject
   entityPrompts?: ClapEntityPrompt[]
+  turbo?: boolean
 }): Promise<ClapProject> {
   const newClap: ClapProject = await apiEditClapEntities({
     clap,
     entityPrompts,
     completionMode: ClapCompletionMode.FULL,
+    turbo,
     token: await getToken()
   })
 

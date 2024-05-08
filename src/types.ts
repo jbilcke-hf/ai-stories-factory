@@ -9,3 +9,11 @@ export type GlobalStatus =
   | "generating"
   | "finished"
   | "error"
+
+export type GenerationStage =
+  | "story"
+  | "entities"
+  | "voices"
+  | "images"
+  | "video_export"
+  | "idle"

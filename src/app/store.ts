@@ -3,7 +3,7 @@
 import { ClapProject, parseClap, serializeClap, ClapMediaOrientation } from "@aitube/clap"
 import { create } from "zustand"
 
-import { GlobalStatus, TaskStatus } from "@/types"
+import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
 import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
 
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
@@ -19,12 +19,16 @@ export const useStore = create<{
   orientation: ClapMediaOrientation
 
   status: GlobalStatus
+  stage: GenerationStage
+
   parseGenerationStatus: TaskStatus
   storyGenerationStatus: TaskStatus
   assetGenerationStatus: TaskStatus
   voiceGenerationStatus: TaskStatus
   imageGenerationStatus: TaskStatus
   videoGenerationStatus: TaskStatus
+  isBusy: boolean
+
   currentClap?: ClapProject
   currentVideo: string
 
@@ -46,6 +50,7 @@ export const useStore = create<{
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
+  syncStatusAndStageState: () => void
   setCurrentClap: (currentClap?: ClapProject) => void
 
   // note: this will preload the video, and compute the orientation too
@@ -62,12 +67,14 @@ export const useStore = create<{
   storyPrompt: "",
   orientation: ClapMediaOrientation.PORTRAIT,
   status: "idle",
+  stage: "idle",
   parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
   assetGenerationStatus: "idle",
   voiceGenerationStatus: "idle",
   imageGenerationStatus: "idle",
   videoGenerationStatus: "idle",
+  isBusy: false,
   currentClap: undefined,
   currentVideo: "",
   currentVideoOrientation: ClapMediaOrientation.PORTRAIT,
@@ -96,12 +103,55 @@ export const useStore = create<{
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => { set({ status }) },
-  setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => { set({ parseGenerationStatus }) },
-  setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => { set({ storyGenerationStatus }) },
-  setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => { set({ assetGenerationStatus }) },
-  setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => { set({ voiceGenerationStatus }) },
-  setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => { set({ imageGenerationStatus }) },
-  setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => { set({ videoGenerationStatus }) },
+  setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => {
+    set({ parseGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => {
+    set({ storyGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => {
+    set({ assetGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => {
+    set({ voiceGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => {
+    set({ imageGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => {
+    set({ videoGenerationStatus })
+    get().syncStatusAndStageState()
+  },
+  syncStatusAndStageState: () => {
+    const { status, storyGenerationStatus, assetGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus } = get()
+
+    // note: we don't really have "stages" since some things run in parallel,
+    // and some parallel tasks may finish before the others
+    // still, we need to estimate how long things should take, so it has some usefulness
+    let stage: GenerationStage =
+      storyGenerationStatus === "generating" ? "story" :
+      assetGenerationStatus === "generating" ? "entities" :
+      voiceGenerationStatus === "generating" ? "voices" :
+      imageGenerationStatus === "generating" ? "images" :
+      videoGenerationStatus === "generating" ? "video_export" :
+      "idle"
+
+    // I think we still need the global status
+    // that is because we can have parallelism
+    const isBusy = stage !== "idle" || status === "generating"
+
+    console.log("syncStatus:", {
+      status, storyGenerationStatus, assetGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus,
+      stage, isBusy
+
+    })
+    set({ isBusy, stage })
+  },
   setCurrentClap: (currentClap?: ClapProject) => { set({ currentClap }) },
   setGeneratedVideo: async (currentVideo: string): Promise<void> => {
     const currentVideoOrientation = await getVideoOrientation(currentVideo)

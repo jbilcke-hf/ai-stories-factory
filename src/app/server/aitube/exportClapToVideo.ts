@@ -7,8 +7,10 @@ import { getToken } from "./getToken"
 
 export async function exportClapToVideo({
   clap,
+  turbo = false,
 }: {
   clap: ClapProject
+  turbo?: boolean
 }): Promise<string> {
   // TODO: maybe we should return a blob instead,
   // as this could be big eg. a few megabytes
@@ -16,6 +18,7 @@ export async function exportClapToVideo({
   const dataUri: string = await apiExportClapToVideo({
     clap,
     format: "mp4",
+    turbo,
     token: await getToken()
   })
 

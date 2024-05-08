@@ -7,12 +7,15 @@ import { getToken } from "./getToken"
 
 export async function editClapVideos({
   clap,
+  turbo = false,
 }: {
   clap: ClapProject
+  turbo?: boolean
 }): Promise<ClapProject> {
   const newClap: ClapProject = await apiEditClapVideos({
     clap,
     completionMode: ClapCompletionMode.FULL,
+    turbo,
     token: await getToken()
   })
 

@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { Field } from '@/components/form/field'
 import { Label } from '@/components/form/label'
 import { getParam } from '@/lib/utils/getParam'
+import { GenerationStage } from '@/types'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -70,14 +71,7 @@ export function Main() {
 
   const canSeeBetaFeatures = true // getParam<boolean>("beta", false)
 
-  const hasPendingTasks =
-    storyGenerationStatus === "generating" ||
-    assetGenerationStatus === "generating" ||
-    voiceGenerationStatus === "generating" ||
-    imageGenerationStatus === "generating" ||
-    videoGenerationStatus === "generating"
-
-  const isBusy = status === "generating" || hasPendingTasks
+  const isBusy = useStore(s => s.isBusy)
 
   const { openFilePicker, filesContent } = useFilePicker({
     accept: '.clap',
@@ -123,7 +117,10 @@ export function Main() {
       try {
         setProgress(60)
         setVoiceGenerationStatus("generating")
-        clap = await editClapDialogues({ clap })
+        clap = await editClapDialogues({
+          clap,
+          turbo: true,
+        })
 
         if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
@@ -144,7 +141,10 @@ export function Main() {
   
       let assetUrl = ""
       try {
-        assetUrl = await exportClapToVideo({ clap })
+        assetUrl = await exportClapToVideo({
+          clap,
+         turbo: true
+        })
       } catch (err) {
         console.error("failed to render the Clap file:", err)
         setError(`${err}`)
@@ -177,7 +177,7 @@ export function Main() {
 
       let clap: ClapProject | undefined = undefined
       try {
-        setProgress(1)
+        setProgress(0)
 
         setStatus("generating")
         setStoryGenerationStatus("generating")
@@ -186,6 +186,7 @@ export function Main() {
         clap = await createClap({
           prompt: promptDraft.current,
           orientation: useStore.getState().orientation,
+          turbo: true,
         })
 
         if (!clap) { throw new Error(`failed to create the clap`) }
@@ -216,9 +217,12 @@ export function Main() {
 
  
       try {
-        setProgress(10)
+        setProgress(20)
         setAssetGenerationStatus("generating")
-        clap = await editClapEntities({ clap })
+        clap = await editClapEntities({
+          clap,
+          turbo: true,
+        })
 
         if (!clap) { throw new Error(`failed to edit the entities`) }
 
@@ -253,7 +257,10 @@ export function Main() {
       try {
         setProgress(40)
         setImageGenerationStatus("generating")
-        clap = await editClapStoryboards({ clap })
+        clap = await editClapStoryboards({
+          clap,
+          turbo: true
+        })
 
         if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
@@ -272,9 +279,12 @@ export function Main() {
 
       
       try {
-        setProgress(60)
+        setProgress(50)
         setVoiceGenerationStatus("generating")
-        clap = await editClapDialogues({ clap })
+        clap = await editClapDialogues({
+          clap,
+          turbo: true
+        })
 
         if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
@@ -293,26 +303,26 @@ export function Main() {
 
       let assetUrl = ""
       try {
-        setProgress(80)
+        setProgress(75)
         setVideoGenerationStatus("generating")
-        assetUrl = await exportClapToVideo({ clap })
+        assetUrl = await exportClapToVideo({
+          clap,
+          turbo: true
+       })
 
         console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
 
+        setStatus("finished")
+        setError("")
         setVideoGenerationStatus("finished")
+        setGeneratedVideo(assetUrl)
       } catch (err) {
         setVideoGenerationStatus("error")
         setStatus("error")
         setError(`${err}`)
+        setGeneratedVideo("")
         return
       }
-      if (!assetUrl) {
-        return
-      }
-
-      setGeneratedVideo(assetUrl)
-      setStatus("finished")
-      setError("")
     })
   }
 
@@ -321,6 +331,56 @@ export function Main() {
   const isLandscape = currentVideoOrientation === ClapMediaOrientation.LANDSCAPE
   const isPortrait = currentVideoOrientation === ClapMediaOrientation.PORTRAIT
   const isSquare = currentVideoOrientation === ClapMediaOrientation.SQUARE
+
+  const runningRef = useRef(false)
+  const timerRef = useRef<NodeJS.Timeout>()
+
+  const timerFn = async () => {
+    const { isBusy, progress, stage } = useStore.getState()
+
+    clearTimeout(timerRef.current)
+    if (!isBusy || stage === "idle") {
+      return
+    }
+
+    // approximate time in ms take by each step
+    // also we should find adjust the % displayed
+    const progressDelayInMsPerStage: Record<GenerationStage, number> = {
+      story: 2000,
+      entities: 2000,
+      images: 1000,
+      voices: 1000,
+      video_export: 1000,
+      idle: 1000
+    }
+
+    const maxProgressPerStage: Record<GenerationStage, number> = {
+      story: 19,
+      entities: 39,
+      images: 49,
+      voices: 74,
+      video_export: 99,
+      idle: 100
+    }
+
+    console.log("progress function:", {
+      stage,
+      delay: progressDelayInMsPerStage[stage],
+      progress,
+    })
+    useStore.setState({
+      progress: Math.min(maxProgressPerStage[stage], progress + 1) 
+    })
+
+    timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
+  }
+
+  useEffect(() => {
+    timerFn()
+    clearTimeout(timerRef.current)
+    if (!isBusy) { return }
+    timerRef.current = setTimeout(timerFn, 0)
+  }, [isBusy])
 
   return (
     <div className={cn(
@@ -544,7 +604,7 @@ export function Main() {
                         storyPromptDraft ? "opacity-100" : "opacity-80"
                       )}
                     >
-                      <span className="hidden xl:inline mr-1">Load project</span>
+                      <span className="hidden xl:inline mr-1">Load</span>
                       <span className="inline xl:hidden mr-1">Load</span>
                     </Button> : <div></div>
                     }
@@ -562,7 +622,7 @@ export function Main() {
                         storyPromptDraft ? "opacity-100" : "opacity-80"
                       )}
                     >
-                      <span className="hidden xl:inline mr-1">Save project</span>
+                      <span className="hidden xl:inline mr-1">Save</span>
                       <span className="inline xl:hidden mr-1">Save</span>
                     </Button> : <div></div>
                     }
