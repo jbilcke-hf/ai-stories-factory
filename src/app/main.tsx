@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
-import { ClapProject, ClapMediaOrientation } from '@aitube/clap'
+import { ClapProject, ClapMediaOrientation, ClapSegmentCategory } from '@aitube/clap'
 import Image from 'next/image'
 import { useFilePicker } from 'use-file-picker'
 import { DeviceFrameset } from 'react-device-frameset'
@@ -63,7 +63,7 @@ export function Main() {
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
   const setCurrentClap = useStore(s => s.setCurrentClap)
-  const setGeneratedVideo = useStore(s => s.setGeneratedVideo)
+  const setCurrentVideo = useStore(s => s.setCurrentVideo)
   const progress = useStore(s => s.progress)
   const setProgress = useStore(s => s.setProgress)
   const saveClap = useStore(s => s.saveClap)
@@ -88,7 +88,6 @@ export function Main() {
         setProgress,
         setParseGenerationStatus,
         setVideoGenerationStatus,
-        setGeneratedVideo
       } = useStore.getState()
 
       let clap: ClapProject | undefined = undefined
@@ -163,7 +162,7 @@ export function Main() {
   
       console.log(`loadClap(): generated a video: ${assetUrl.slice(0, 60)}...`)
     
-      setGeneratedVideo(assetUrl)
+      setCurrentVideo(assetUrl)
       setStatus("finished")
       setError("")
     }
@@ -239,6 +238,13 @@ export function Main() {
         return
       }
       
+      console.log("-------- GENERATED ENTITIES --------")
+      console.table(clap.entities, [
+        'category',
+        'label',
+        'imagePrompt',
+        'appearance'
+      ])
 
       /*
       if (mainCharacterImage) {
@@ -259,11 +265,15 @@ export function Main() {
         setImageGenerationStatus("generating")
         clap = await editClapStoryboards({
           clap,
+          // the turbo is mandatory here,
+          // since this uses a model with character consistency,
+          // which is not the case for the non-turbo one
           turbo: true
         })
 
         if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
+        // const fusion = 
         console.log(`handleSubmit(): received a clap with images = `, clap)
         setCurrentClap(clap)
         setImageGenerationStatus("finished")
@@ -276,6 +286,13 @@ export function Main() {
       if (!clap) {
         return
       }
+
+      console.log("-------- GENERATED STORYBOARDS --------")
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.STORYBOARD), [
+        'endTimeInMs',
+        'prompt',
+        'assetUrl'
+      ])
 
       
       try {
@@ -298,8 +315,16 @@ export function Main() {
         return
       }
       if (!clap) {
+        console.log("aborting prematurely")
         return
       }
+
+      console.log("-------- GENERATED DIALOGUES --------")
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.DIALOGUE), [
+        'endTimeInMs',
+        'prompt',
+        'entityId',
+      ])
 
       let assetUrl = ""
       try {
@@ -307,22 +332,23 @@ export function Main() {
         setVideoGenerationStatus("generating")
         assetUrl = await exportClapToVideo({
           clap,
-          turbo: true
+          // turbo: true
        })
 
         console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
-
+        setVideoGenerationStatus("finished")
+        setCurrentVideo(assetUrl)
         setStatus("finished")
         setError("")
-        setVideoGenerationStatus("finished")
-        setGeneratedVideo(assetUrl)
       } catch (err) {
+        console.error(`error: `, err)
         setVideoGenerationStatus("error")
         setStatus("error")
         setError(`${err}`)
-        setGeneratedVideo("")
-        return
+        // setCurrentVideo("")
       }
+
+      console.log("-------- GENERATED FINAL VIDEO --------")
     })
   }
 
@@ -350,7 +376,7 @@ export function Main() {
       entities: 2000,
       images: 1000,
       voices: 2000,
-      video_export: 1000,
+      video_export: 1500,
       idle: 1000
     }
 

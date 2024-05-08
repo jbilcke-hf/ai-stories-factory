@@ -14,7 +14,7 @@ export async function editClapStoryboards({
 }): Promise<ClapProject> {
   const newClap: ClapProject = await apiEditClapStoryboards({
     clap,
-    completionMode: ClapCompletionMode.FULL,
+    completionMode: ClapCompletionMode.MERGE,
     turbo,
     token: await getToken()
   })

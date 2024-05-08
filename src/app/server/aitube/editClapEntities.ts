@@ -17,7 +17,7 @@ export async function editClapEntities({
   const newClap: ClapProject = await apiEditClapEntities({
     clap,
     entityPrompts,
-    completionMode: ClapCompletionMode.FULL,
+    completionMode: ClapCompletionMode.MERGE,
     turbo,
     token: await getToken()
   })

@@ -54,7 +54,7 @@ export const useStore = create<{
   setCurrentClap: (currentClap?: ClapProject) => void
 
   // note: this will preload the video, and compute the orientation too
-  setGeneratedVideo: (generatedVideo: string) => Promise<void>
+  setCurrentVideo: (currentVideo: string) => Promise<void>
 
   setProgress: (progress: number) => void
   setError: (error: string) => void
@@ -102,7 +102,10 @@ export const useStore = create<{
   setMainCharacterVoice: (mainCharacterVoice: string) => { set({ mainCharacterVoice }) },
   setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
-  setStatus: (status: GlobalStatus) => { set({ status }) },
+  setStatus: (status: GlobalStatus) => {
+    set({ status })
+    get().syncStatusAndStageState()
+  },
   setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => {
     set({ parseGenerationStatus })
     get().syncStatusAndStageState()
@@ -141,25 +144,33 @@ export const useStore = create<{
       videoGenerationStatus === "generating" ? "video_export" :
       "idle"
 
+
     // I think we still need the global status
     // that is because we can have parallelism
     const isBusy = stage !== "idle" || status === "generating"
-
-    console.log("syncStatus:", {
-      status, storyGenerationStatus, assetGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus,
-      stage, isBusy
-
-    })
+    
     set({ isBusy, stage })
   },
   setCurrentClap: (currentClap?: ClapProject) => { set({ currentClap }) },
-  setGeneratedVideo: async (currentVideo: string): Promise<void> => {
-    const currentVideoOrientation = await getVideoOrientation(currentVideo)
+  setCurrentVideo: async (currentVideo: string): Promise<void> => {
     set({
       currentVideo,
-      currentVideoOrientation
-
     })
+    const { currentVideoOrientation } = get()
+    let orientation: ClapMediaOrientation = currentVideoOrientation
+    try {
+      let newOrientation = await getVideoOrientation(currentVideo)
+      if (newOrientation) {
+        orientation = newOrientation
+      }
+    } catch (err) {
+      console.error(`failed to get the media orientation`)
+    }
+    set({
+      currentVideoOrientation: orientation
+    })
+
+    // get().syncStatusAndStageState()
   },
   setProgress: (progress: number) => { set({ progress }) },
   setError: (error: string) => { set({ error }) },
@@ -167,6 +178,8 @@ export const useStore = create<{
     const { currentClap , storyPrompt } = get()
 
     if (!currentClap) { throw new Error(`cannot save a clap.. if there is no clap`) }
+
+    currentClap.meta.description = storyPrompt
 
     const currentClapBlob: Blob = await serializeClap(currentClap)
 
