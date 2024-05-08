@@ -349,7 +349,7 @@ export function Main() {
       story: 2000,
       entities: 2000,
       images: 1000,
-      voices: 1000,
+      voices: 2000,
       video_export: 1000,
       idle: 1000
     }
@@ -363,11 +363,13 @@ export function Main() {
       idle: 100
     }
 
+    /*
     console.log("progress function:", {
       stage,
       delay: progressDelayInMsPerStage[stage],
       progress,
     })
+    */
     useStore.setState({
       progress: Math.min(maxProgressPerStage[stage], progress + 1) 
     })
