@@ -6,7 +6,7 @@ colorFrom: yellow
 colorTo: yellow
 pinned: true
 app_port: 3000
-disable_embedding: false
+disable_embedding: true
 hf_oauth: true
 header: mini
 short_description: Generate video stories using AI ✨
