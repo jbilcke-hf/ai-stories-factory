@@ -7,11 +7,11 @@ import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
 import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
 
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
+import { putTextInInput } from "@/lib/utils/putTextInInput"
 
 export const useStore = create<{
   mainCharacterImage: string
   mainCharacterVoice: string
-  storyPromptDraft: string
   storyPrompt: string
 
   // the desired orientation for the next video
@@ -43,7 +43,6 @@ export const useStore = create<{
   setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => void
   setMainCharacterImage: (mainCharacterImage: string) => void
   setMainCharacterVoice: (mainCharacterVoice: string) => void
-  setStoryPromptDraft: (storyPromptDraft: string) => void
   setStoryPrompt: (storyPrompt: string) => void
   setStatus: (status: GlobalStatus) => void
   setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => void
@@ -106,7 +105,6 @@ export const useStore = create<{
   setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => { set({ currentVideoOrientation }) },
   setMainCharacterImage: (mainCharacterImage: string) => { set({ mainCharacterImage }) },
   setMainCharacterVoice: (mainCharacterVoice: string) => { set({ mainCharacterVoice }) },
-  setStoryPromptDraft: (storyPromptDraft: string) => { set({ storyPromptDraft }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
   setStatus: (status: GlobalStatus) => {
     set({ status })
@@ -230,8 +228,9 @@ export const useStore = create<{
 
     if (!currentClap) { throw new Error(`failed to import the clap`) }
 
-
     const storyPrompt = currentClap.meta.description.split("||").pop() || ""
+
+    putTextInInput(document.getElementById("story-prompt-draft") as HTMLInputElement, storyPrompt)
 
     // TODO: parseVideoOrientation should be put inside @aitube/clap (in the utils)
     // const orientation = parseVideoOrientation(currentClap.meta.orientation)
@@ -244,7 +243,6 @@ export const useStore = create<{
     set({
       currentClap,
       storyPrompt,
-      storyPromptDraft: storyPrompt,
       orientation,
       currentVideoOrientation: orientation,
     })

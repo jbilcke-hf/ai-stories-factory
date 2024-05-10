@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
+import { useLocalStorage } from "usehooks-ts"
 import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
 import { useFilePicker } from 'use-file-picker'
@@ -33,10 +34,16 @@ import { GenerationStage } from '@/types'
 import { FileContent } from 'use-file-picker/dist/interfaces'
 
 export function Main() {
+  // for indelicate users trying to generate many Roblox or "mastiff" videos at once
+  const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
+    "AI_STORIES_FACTORY_STORY_PROMPT_DRAFT",
+    ""
+  )
+  const promptDraftRef = useRef("")
+  promptDraftRef.current = storyPromptDraft
+
   const [_isPending, startTransition] = useTransition()
-  const storyPromptDraft = useStore(s => s.storyPromptDraft)
-  const promptDraft = useRef("")
-  promptDraft.current = storyPromptDraft
+
   const storyPrompt = useStore(s => s.storyPrompt)
   const mainCharacterImage = useStore(s => s.mainCharacterImage)
   const mainCharacterVoice = useStore(s => s.mainCharacterVoice)
@@ -53,7 +60,6 @@ export function Main() {
   const currentClap = useStore(s => s.currentClap)
   const currentVideo = useStore(s => s.currentVideo)
   const currentVideoOrientation = useStore(s => s.currentVideoOrientation)
-  const setStoryPromptDraft = useStore(s => s.setStoryPromptDraft)
   const setStoryPrompt = useStore(s => s.setStoryPrompt)
   const setMainCharacterImage = useStore(s => s.setMainCharacterImage)
   const setMainCharacterVoice = useStore(s => s.setMainCharacterVoice)
@@ -118,10 +124,10 @@ export function Main() {
 
       setStatus("generating")
       setStoryGenerationStatus("generating")
-      setStoryPrompt(promptDraft.current)
+      setStoryPrompt(promptDraftRef.current)
 
       clap = await createClap({
-        prompt: promptDraft.current,
+        prompt: promptDraftRef.current,
         orientation: useStore.getState().orientation,
 
         turbo: true,
@@ -320,7 +326,7 @@ export function Main() {
   const handleSubmit = async () => {
 
     startTransition(async () => {
-      console.log(`handleSubmit(): generating a clap using prompt = "${promptDraft.current}" `)
+      console.log(`handleSubmit(): generating a clap using prompt = "${promptDraftRef.current}" `)
 
       try {
         let clap = await generateStory()
@@ -626,11 +632,12 @@ export function Main() {
                       space-y-2 md:space-y-4
                     ">
                       <TextareaField
+                        id="story-prompt-draft"
                         // label="My story:"
                         // disabled={modelState != 'ready'}
                         onChange={(e) => {
                           setStoryPromptDraft(e.target.value)
-                          promptDraft.current = e.target.value
+                          promptDraftRef.current = e.target.value
                         }}
                         placeholder="Yesterday I was at my favorite pizza place and.."
                         inputClassName="
