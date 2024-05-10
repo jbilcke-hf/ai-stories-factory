@@ -25,7 +25,6 @@ import { exportClapToVideo } from './server/aitube/exportClapToVideo'
 
 import { useStore } from './store'
 import HFLogo from "./hf-logo.svg"
-import { fileToBase64 } from '@/lib/base64/fileToBase64'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/form/field'
 import { Label } from '@/components/form/label'
@@ -34,10 +33,9 @@ import { GenerationStage } from '@/types'
 import { FileContent } from 'use-file-picker/dist/interfaces'
 
 export function Main() {
-  // for indelicate users trying to generate many Roblox or "mastiff" videos at once
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
     "AI_STORIES_FACTORY_STORY_PROMPT_DRAFT",
-    ""
+    "Yesterday I was walking in SF when I saw a zebra"
   )
   const promptDraftRef = useRef("")
   promptDraftRef.current = storyPromptDraft
