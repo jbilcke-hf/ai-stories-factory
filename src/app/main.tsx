@@ -444,30 +444,6 @@ export function Main() {
       return
     }
 
-    // approximate time in ms take by each step
-    // also we should find adjust the % displayed
-    const progressDelayInMsPerStage: Record<GenerationStage, number> = {
-      story: 2200,
-      entities: 2200,
-      music: 3000,
-      images: 1000,
-      voices: 2000,
-      videos: 2000,
-      final: 2500,
-      idle: 1000
-    }
-
-    const maxProgressPerStage: Record<GenerationStage, number> = {
-      story: 19,
-      entities: 29,
-      music: 39,
-      images: 49,
-      videos: 69,
-      voices: 84,
-      final: 99,
-      idle: 100
-    }
-
     /*
     console.log("progress function:", {
       stage,
@@ -481,7 +457,7 @@ export function Main() {
     })
 
     // timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
-    timerRef.current = setTimeout(timerFn, 750)
+    timerRef.current = setTimeout(timerFn, 800)
   }
 
   useEffect(() => {
