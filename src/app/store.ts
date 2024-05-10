@@ -24,9 +24,11 @@ export const useStore = create<{
   parseGenerationStatus: TaskStatus
   storyGenerationStatus: TaskStatus
   assetGenerationStatus: TaskStatus
+  musicGenerationStatus: TaskStatus
   voiceGenerationStatus: TaskStatus
   imageGenerationStatus: TaskStatus
   videoGenerationStatus: TaskStatus
+  finalGenerationStatus: TaskStatus
   isBusy: boolean
 
   currentClap?: ClapProject
@@ -47,9 +49,11 @@ export const useStore = create<{
   setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => void
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => void
   setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => void
+  setMusicGenerationStatus: (musicGenerationStatus: TaskStatus) => void
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
+  setFinalGenerationStatus: (finalGenerationStatus: TaskStatus) => void
   syncStatusAndStageState: () => void
   setCurrentClap: (currentClap?: ClapProject) => void
 
@@ -71,9 +75,11 @@ export const useStore = create<{
   parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
   assetGenerationStatus: "idle",
+  musicGenerationStatus: "idle",
   voiceGenerationStatus: "idle",
   imageGenerationStatus: "idle",
   videoGenerationStatus: "idle",
+  finalGenerationStatus: "idle",
   isBusy: false,
   currentClap: undefined,
   currentVideo: "",
@@ -118,6 +124,10 @@ export const useStore = create<{
     set({ assetGenerationStatus })
     get().syncStatusAndStageState()
   },
+  setMusicGenerationStatus: (musicGenerationStatus: TaskStatus) => {
+    set({ musicGenerationStatus })
+    get().syncStatusAndStageState()
+  },
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => {
     set({ voiceGenerationStatus })
     get().syncStatusAndStageState()
@@ -130,8 +140,12 @@ export const useStore = create<{
     set({ videoGenerationStatus })
     get().syncStatusAndStageState()
   },
+  setFinalGenerationStatus: (finalGenerationStatus: TaskStatus) => {
+    set({ finalGenerationStatus })
+    get().syncStatusAndStageState()
+  },
   syncStatusAndStageState: () => {
-    const { status, storyGenerationStatus, assetGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus } = get()
+    const { status, storyGenerationStatus, assetGenerationStatus, musicGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus, finalGenerationStatus } = get()
 
     // note: we don't really have "stages" since some things run in parallel,
     // and some parallel tasks may finish before the others
@@ -139,9 +153,11 @@ export const useStore = create<{
     let stage: GenerationStage =
       storyGenerationStatus === "generating" ? "story" :
       assetGenerationStatus === "generating" ? "entities" :
+      musicGenerationStatus === "generating" ? "music" :
       voiceGenerationStatus === "generating" ? "voices" :
       imageGenerationStatus === "generating" ? "images" :
-      videoGenerationStatus === "generating" ? "video_export" :
+      videoGenerationStatus === "generating" ? "videos" :
+      finalGenerationStatus === "generating" ? "final" :
       "idle"
 
 

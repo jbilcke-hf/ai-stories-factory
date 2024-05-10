@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
-import { ClapProject, ClapMediaOrientation, ClapSegmentCategory } from '@aitube/clap'
+import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
 import { useFilePicker } from 'use-file-picker'
 import { DeviceFrameset } from 'react-device-frameset'
@@ -18,6 +18,8 @@ import { createClap } from './server/aitube/createClap'
 import { editClapEntities } from './server/aitube/editClapEntities'
 import { editClapDialogues } from './server/aitube/editClapDialogues'
 import { editClapStoryboards } from './server/aitube/editClapStoryboards'
+import { editClapMusic } from './server/aitube/editClapMusic'
+import { editClapVideos } from './server/aitube/editClapVideos'
 import { exportClapToVideo } from './server/aitube/exportClapToVideo'
 
 import { useStore } from './store'
@@ -42,9 +44,11 @@ export function Main() {
   const parseGenerationStatus = useStore(s => s.parseGenerationStatus)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
   const assetGenerationStatus = useStore(s => s.assetGenerationStatus)
+  const musicGenerationStatus = useStore(s => s.musicGenerationStatus)
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
   const imageGenerationStatus = useStore(s => s.imageGenerationStatus)
   const videoGenerationStatus = useStore(s => s.videoGenerationStatus)
+  const finalGenerationStatus = useStore(s => s.finalGenerationStatus)
   const currentClap = useStore(s => s.currentClap)
   const currentVideo = useStore(s => s.currentVideo)
   const currentVideoOrientation = useStore(s => s.currentVideoOrientation)
@@ -59,9 +63,11 @@ export function Main() {
   const setParseGenerationStatus = useStore(s => s.setParseGenerationStatus)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
   const setAssetGenerationStatus = useStore(s => s.setAssetGenerationStatus)
+  const setMusicGenerationStatus = useStore(s => s.setMusicGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
   const setVideoGenerationStatus = useStore(s => s.setVideoGenerationStatus)
+  const setFinalGenerationStatus = useStore(s => s.setFinalGenerationStatus)
   const setCurrentClap = useStore(s => s.setCurrentClap)
   const setCurrentVideo = useStore(s => s.setCurrentVideo)
   const progress = useStore(s => s.progress)
@@ -87,7 +93,7 @@ export function Main() {
         setStatus,
         setProgress,
         setParseGenerationStatus,
-        setVideoGenerationStatus,
+        setFinalGenerationStatus,
       } = useStore.getState()
 
       let clap: ClapProject | undefined = undefined
@@ -113,6 +119,7 @@ export function Main() {
 
       setParseGenerationStatus("finished")
 
+      /*
       try {
         setProgress(60)
         setVoiceGenerationStatus("generating")
@@ -135,8 +142,9 @@ export function Main() {
       if (!clap) {
         return
       }
+      */
 
-      setVideoGenerationStatus("generating")
+      setFinalGenerationStatus("generating")
   
       let assetUrl = ""
       try {
@@ -150,13 +158,13 @@ export function Main() {
       }
     
       if (!assetUrl) {
-        setVideoGenerationStatus("error")
+        setFinalGenerationStatus("error")
         setStatus("error")
         setProgress(0)
         return
       }
 
-      setVideoGenerationStatus("finished")
+      setFinalGenerationStatus("finished")
 
       setProgress(80)
   
@@ -169,41 +177,30 @@ export function Main() {
     fn()
   }, [fileData?.name])
   
-  const handleSubmit = async () => {
+  const generateStory = async (): Promise<ClapProject> => {
 
-    startTransition(async () => {
-      console.log(`handleSubmit(): generating a clap using prompt = "${promptDraft.current}" `)
+    let clap: ClapProject | undefined = undefined
+    try {
+      setProgress(0)
 
-      let clap: ClapProject | undefined = undefined
-      try {
-        setProgress(0)
+      setStatus("generating")
+      setStoryGenerationStatus("generating")
+      setStoryPrompt(promptDraft.current)
 
-        setStatus("generating")
-        setStoryGenerationStatus("generating")
-        setStoryPrompt(promptDraft.current)
+      clap = await createClap({
+        prompt: promptDraft.current,
+        orientation: useStore.getState().orientation,
 
-        clap = await createClap({
-          prompt: promptDraft.current,
-          orientation: useStore.getState().orientation,
-          turbo: true,
-        })
+        turbo: true,
+      })
 
-        if (!clap) { throw new Error(`failed to create the clap`) }
+      if (!clap) { throw new Error(`failed to create the clap`) }
 
-        if (clap.segments.length <= 1) { throw new Error(`failed to generate more than one segments`) }
+      if (clap.segments.length <= 1) { throw new Error(`failed to generate more than one segments`) }
 
-        console.log(`handleSubmit(): received a clap = `, clap)
-        setCurrentClap(clap)
-        setStoryGenerationStatus("finished")
-      } catch (err) {
-        setStoryGenerationStatus("error")
-        setStatus("error")
-        setError(`${err}`)
-        return
-      }
-      if (!clap) {
-        return
-      }
+      console.log(`handleSubmit(): received a clap = `, clap)
+      setCurrentClap(clap)
+      setStoryGenerationStatus("finished")
 
       console.log("-------- GENERATED STORY --------")
       console.table(clap.segments, [
@@ -213,34 +210,30 @@ export function Main() {
         'category',
         'prompt'
       ])
+      return clap
+    } catch (err) {
+      setStoryGenerationStatus("error")
+      throw err
+    }
+  }
 
- 
-      try {
-        setProgress(20)
-        setAssetGenerationStatus("generating")
-        clap = await editClapEntities({
-          clap,
+  const generateEntities = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      setProgress(20)
+      setAssetGenerationStatus("generating")
+      clap = await editClapEntities({
+        clap,
 
-          // generating entities requires a "smart" LLM
-          turbo: false,
-          // turbo: true,
-        })
+        // generating entities requires a "smart" LLM
+        turbo: false,
+        // turbo: true,
+      })
 
-        if (!clap) { throw new Error(`failed to edit the entities`) }
+      if (!clap) { throw new Error(`failed to edit the entities`) }
 
-        console.log(`handleSubmit(): received a clap with entities = `, clap)
-        setCurrentClap(clap)
-        setAssetGenerationStatus("finished")
-      } catch (err) {
-        setAssetGenerationStatus("error")
-        setStatus("error")
-        setError(`${err}`)
-        return
-      }
-      if (!clap) {
-        return
-      }
-      
+      console.log(`handleSubmit(): received a clap with entities = `, clap)
+      setCurrentClap(clap)
+      setAssetGenerationStatus("finished")
       console.log("-------- GENERATED ENTITIES --------")
       console.table(clap.entities, [
         'category',
@@ -248,110 +241,209 @@ export function Main() {
         'imagePrompt',
         'appearance'
       ])
+      return clap
+    } catch (err) {
+      setAssetGenerationStatus("error")
+      throw err
+    }
+  }
 
-      /*
-      if (mainCharacterImage) {
-        console.log("handleSubmit(): User specified a main character image")
-        // various strategies here, for instance we can assume that the first character is the main character,
-        // or maybe a more reliable way is to count the number of occurrences.
-        // there is a risk of misgendering, so ideally we should add some kind of UI to do this,
-        // such as a list of characters.
-      }
-      */
 
-      // TODO Julian
-      console.log("handleSubmit(): TODO Julian: generate images in parallel of the dialogue using Promise.all()")
-      // this is not trivial to do btw, since we will have to merge the clap together
-      // (this could be a helper function inside @aitube/clap)
-      try {
-        setProgress(40)
-        setImageGenerationStatus("generating")
-        clap = await editClapStoryboards({
-          clap,
-          // the turbo is mandatory here,
-          // since this uses a model with character consistency,
-          // which is not the case for the non-turbo one
-          turbo: true
-        })
+  const generateMusic = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      setProgress(30)
+      setMusicGenerationStatus("generating")
 
-        if (!clap) { throw new Error(`failed to edit the storyboards`) }
+      clap = await editClapMusic({
+        clap,
+        turbo: true
+      })
 
-        // const fusion = 
-        console.log(`handleSubmit(): received a clap with images = `, clap)
-        setCurrentClap(clap)
-        setImageGenerationStatus("finished")
-      } catch (err) {
-        setImageGenerationStatus("error")
-        setStatus("error")
-        setError(`${err}`)
-        return
-      }
-      if (!clap) {
-        return
-      }
+      if (!clap) { throw new Error(`failed to edit the music`) }
 
+      console.log(`handleSubmit(): received a clap with music = `, clap)
+      setCurrentClap(clap)
+      setMusicGenerationStatus("finished")
+      console.log("-------- GENERATED MUSIC --------")
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.MUSIC), [
+        'endTimeInMs',
+        'prompt',
+        'entityId',
+      ])
+      return clap
+    } catch (err) {
+      setMusicGenerationStatus("error")
+      throw err
+    }
+  }
+
+  const generateStoryboards = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      setProgress(40)
+      setImageGenerationStatus("generating")
+      clap = await editClapStoryboards({
+        clap,
+        // the turbo is mandatory here,
+        // since this uses a model with character consistency,
+        // which is not the case for the non-turbo one
+        turbo: true
+      })
+
+      if (!clap) { throw new Error(`failed to edit the storyboards`) }
+
+      // const fusion = 
+      console.log(`handleSubmit(): received a clap with images = `, clap)
+      setCurrentClap(clap)
+      setImageGenerationStatus("finished")
       console.log("-------- GENERATED STORYBOARDS --------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.STORYBOARD), [
         'endTimeInMs',
         'prompt',
         'assetUrl'
       ])
+      return clap
+    } catch (err) {
+      setImageGenerationStatus("error")
+      throw err
+    }
+  }
 
-      
-      try {
-        setProgress(50)
-        setVoiceGenerationStatus("generating")
-        clap = await editClapDialogues({
-          clap,
-          turbo: true
-        })
+  const generateVideos = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      setProgress(50)
+      setVideoGenerationStatus("generating")
 
-        if (!clap) { throw new Error(`failed to edit the dialogues`) }
+      clap = await editClapVideos({
+        clap,
+        turbo: true
+      })
 
-        console.log(`handleSubmit(): received a clap with dialogues = `, clap)
-        setCurrentClap(clap)
-        setVoiceGenerationStatus("finished")
-      } catch (err) {
-        setVoiceGenerationStatus("error")
-        setStatus("error")
-        setError(`${err}`)
-        return
-      }
-      if (!clap) {
-        console.log("aborting prematurely")
-        return
-      }
+      if (!clap) { throw new Error(`failed to edit the videos`) }
 
+      console.log(`handleSubmit(): received a clap with videos = `, clap)
+      setCurrentClap(clap)
+      setVideoGenerationStatus("finished")
+      console.log("-------- GENERATED VIDEOS --------")
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.VIDEO), [
+        'endTimeInMs',
+        'prompt',
+        'entityId',
+      ])
+      return clap
+    } catch (err) {
+      setVideoGenerationStatus("error")
+      throw err
+    }
+  }
+
+  const generateDialogues = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      setProgress(70)
+      setVoiceGenerationStatus("generating")
+      clap = await editClapDialogues({
+        clap,
+        turbo: true
+      })
+
+      if (!clap) { throw new Error(`failed to edit the dialogues`) }
+
+      console.log(`handleSubmit(): received a clap with dialogues = `, clap)
+      setCurrentClap(clap)
+      setVoiceGenerationStatus("finished")
       console.log("-------- GENERATED DIALOGUES --------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.DIALOGUE), [
         'endTimeInMs',
         'prompt',
         'entityId',
       ])
+      return clap
+    } catch (err) {
+      setVoiceGenerationStatus("error")
+      throw err
+    }
+  }
 
-      let assetUrl = ""
+  const generateFinalVideo = async (clap: ClapProject): Promise<string> => {
+
+    let assetUrl = ""
+    try {
+      setProgress(85)
+      setFinalGenerationStatus("generating")
+      assetUrl = await exportClapToVideo({
+        clap,
+        turbo: true
+      })
+
+      console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
+      setFinalGenerationStatus("finished")
+      setCurrentVideo(assetUrl)
+      return assetUrl
+    } catch (err) {
+      setFinalGenerationStatus("error")
+      throw err
+    }
+  }
+  
+  const handleSubmit = async () => {
+
+    startTransition(async () => {
+      console.log(`handleSubmit(): generating a clap using prompt = "${promptDraft.current}" `)
+
       try {
-        setProgress(75)
-        setVideoGenerationStatus("generating")
-        assetUrl = await exportClapToVideo({
-          clap,
-          // turbo: true
-       })
+        let clap = await generateStory()
+        
+        const claps = await Promise.all([
+          generateMusic(clap),
+          generateVideos(clap)
+        ])
 
-        console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
-        setVideoGenerationStatus("finished")
-        setCurrentVideo(assetUrl)
+        for (const newerClap of claps) {
+          console.log("newerClap:", newerClap)
+          clap = await updateClap(clap, newerClap, {
+            overwriteMeta: false,
+            inlineReplace: true,
+          })
+        }
+        console.log("finalClap: ", clap)
+
+        /*
+        clap = await claps.reduce(async (existingClap, newerClap) =>
+          updateClap(existingClap, newerClap, {
+            overwriteMeta: false,
+            inlineReplace: true,
+          })
+        , Promise.resolve(clap)
+        */
+
+       
+        // We can't have consistent characters with video (yet)
+        // clap = await generateEntities(clap)
+
+        /*
+        if (mainCharacterImage) {
+          console.log("handleSubmit(): User specified a main character image")
+          // various strategies here, for instance we can assume that the first character is the main character,
+          // or maybe a more reliable way is to count the number of occurrences.
+          // there is a risk of misgendering, so ideally we should add some kind of UI to do this,
+          // such as a list of characters.
+        }
+        */
+
+        // let's skip storyboards for now
+        // clap = await generateStoryboards(clap)
+
+        // clap = await generateVideos(clap)
+        // clap = await generateDialogues(clap)
+     
+        await generateFinalVideo(clap)
+
         setStatus("finished")
         setError("")
       } catch (err) {
-        console.error(`error: `, err)
-        setVideoGenerationStatus("error")
+        console.error(`failed to generate: `, err)
         setStatus("error")
         setError(`${err}`)
-        // setCurrentVideo("")
       }
-
-      console.log("-------- GENERATED FINAL VIDEO --------")
     })
   }
 
@@ -377,18 +469,22 @@ export function Main() {
     const progressDelayInMsPerStage: Record<GenerationStage, number> = {
       story: 2200,
       entities: 2200,
+      music: 3000,
       images: 1000,
       voices: 2000,
-      video_export: 2500,
+      videos: 2000,
+      final: 2500,
       idle: 1000
     }
 
     const maxProgressPerStage: Record<GenerationStage, number> = {
       story: 19,
-      entities: 39,
+      entities: 29,
+      music: 39,
       images: 49,
-      voices: 74,
-      video_export: 99,
+      videos: 69,
+      voices: 84,
+      final: 99,
       idle: 100
     }
 
@@ -424,20 +520,20 @@ export function Main() {
       // `bg-gradient-to-br from-amber-700 to-yellow-300`, 
 
       // warm orange, a bit flash but not bad, not bad at all
-     // `bg-gradient-to-br from-orange-700 to-yellow-400`, 
+      // `bg-gradient-to-br from-orange-700 to-yellow-400`, 
    
-     // nice "AiTube" vibe
-     `bg-gradient-to-br from-red-700 to-yellow-400`, 
+      // nice "AiTube" vibe
+      // `bg-gradient-to-br from-red-700 to-yellow-400`, 
    
-     // pretty cool lime!
-     // `bg-gradient-to-br from-lime-700 to-yellow-400`, 
+      // pretty cool lime!
+      `bg-gradient-to-br from-lime-700 to-yellow-400`, 
 
-     // new style, pretty "fresh" - maybe too bright? 
-     // use a dark logo for this one
-     // `bg-gradient-to-br from-yellow-200 to-yellow-500`, 
+      // new style, pretty "fresh" - maybe too bright? 
+      // use a dark logo for this one
+      // `bg-gradient-to-br from-yellow-200 to-yellow-500`, 
       
-     // too pastel
-     // `bg-gradient-to-br from-yellow-200 to-red-300`, 
+      // too pastel
+      // `bg-gradient-to-br from-yellow-200 to-red-300`, 
       
       // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
       `w-screen h-full overflow-y-scroll md:overflow-hidden`,
@@ -755,12 +851,14 @@ export function Main() {
                     <p className="text-2xl font-bold">{progress}%</p> 
                     <p className="text-base text-white/70">{isBusy
                       ? (
-                        storyGenerationStatus === "generating" ? "Writing the story.."
+                        storyGenerationStatus === "generating" ? "Writing story.."
                         : parseGenerationStatus === "generating" ? "Loading the project.."
                         : assetGenerationStatus === "generating" ? "Casting characters.."
+                        : musicGenerationStatus === "generating" ? "Producing music.."
                         : imageGenerationStatus === "generating" ? "Creating storyboards.."
-                        : voiceGenerationStatus === "generating" ? "Recording voices.."
-                        : videoGenerationStatus === "generating" ? "Assembling final video.."
+                        : videoGenerationStatus === "generating" ? "Filming shots.."
+                        : voiceGenerationStatus === "generating" ? "Recording dialogues.."
+                        : finalGenerationStatus === "generating" ? "Assembling final cut.."
                         : "Please wait.."
                       )
                       : status === "error"

@@ -13,7 +13,9 @@ export type GlobalStatus =
 export type GenerationStage =
   | "story"
   | "entities"
+  | "music"
   | "voices"
   | "images"
-  | "video_export"
+  | "videos"
+  | "final"
   | "idle"
