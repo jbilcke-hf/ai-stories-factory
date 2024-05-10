@@ -30,6 +30,7 @@ import { Field } from '@/components/form/field'
 import { Label } from '@/components/form/label'
 import { getParam } from '@/lib/utils/getParam'
 import { GenerationStage } from '@/types'
+import { FileContent } from 'use-file-picker/dist/interfaces'
 
 export function Main() {
   const [_isPending, startTransition] = useTransition()
@@ -79,104 +80,35 @@ export function Main() {
 
   const isBusy = useStore(s => s.isBusy)
 
-  const { openFilePicker, filesContent } = useFilePicker({
-    accept: '.clap',
-    readAs: "ArrayBuffer"
-  })
-  const fileData = filesContent[0]
+  const importStory = async (fileData: FileContent<ArrayBuffer>): Promise<ClapProject> => {
+    if (!fileData?.name) { throw new Error(`invalid file (missing file name)`) }
 
-  useEffect(() => {
-    const fn = async () => {
-      if (!fileData?.name) { return }
+    const {
+      setStatus,
+      setProgress,
+      setParseGenerationStatus,
+    } = useStore.getState()
 
-      const {
-        setStatus,
-        setProgress,
-        setParseGenerationStatus,
-        setFinalGenerationStatus,
-      } = useStore.getState()
+    let clap: ClapProject | undefined = undefined
 
-      let clap: ClapProject | undefined = undefined
+    setParseGenerationStatus("generating")
 
-      setStatus("generating")
-      setProgress(25)
-      setParseGenerationStatus("generating")
+    try {
+      const blob = new Blob([fileData.content])
+      clap = await loadClap(blob, fileData.name)
 
-      try {
-        const blob = new Blob([fileData.content])
-        clap = await loadClap(blob, fileData.name)
-      } catch (err) {
-        console.error("failed to load the Clap file:", err)
-        setError(`${err}`)
-      }
-
-      if (!clap) {
-        setParseGenerationStatus("error")
-        setStatus("error")
-        setProgress(0)
-        return
-      }
-
+      if (!clap) { throw new Error(`failed to load the clap file`) }
       setParseGenerationStatus("finished")
-
-      /*
-      try {
-        setProgress(60)
-        setVoiceGenerationStatus("generating")
-        clap = await editClapDialogues({
-          clap,
-          turbo: true,
-        })
-
-        if (!clap) { throw new Error(`failed to edit the dialogues`) }
-
-        console.log(`handleSubmit(): received a clap with dialogues = `, clap)
-        setCurrentClap(clap)
-        setVoiceGenerationStatus("finished")
-      } catch (err) {
-        setVoiceGenerationStatus("error")
-        setStatus("error")
-        setError(`${err}`)
-        return
-      }
-      if (!clap) {
-        return
-      }
-      */
-
-      setFinalGenerationStatus("generating")
-  
-      let assetUrl = ""
-      try {
-        assetUrl = await exportClapToVideo({
-          clap,
-         turbo: true
-        })
-      } catch (err) {
-        console.error("failed to render the Clap file:", err)
-        setError(`${err}`)
-      }
-    
-      if (!assetUrl) {
-        setFinalGenerationStatus("error")
-        setStatus("error")
-        setProgress(0)
-        return
-      }
-
-      setFinalGenerationStatus("finished")
-
-      setProgress(80)
-  
-      console.log(`loadClap(): generated a video: ${assetUrl.slice(0, 60)}...`)
-    
-      setCurrentVideo(assetUrl)
-      setStatus("finished")
-      setError("")
+      setCurrentClap(clap)
+      return clap
+    } catch (err) {
+      console.error("failed to load the Clap file:", err)
+      setParseGenerationStatus("error")
+      throw err
     }
-    fn()
-  }, [fileData?.name])
-  
+  }
+
+
   const generateStory = async (): Promise<ClapProject> => {
 
     let clap: ClapProject | undefined = undefined
@@ -219,7 +151,7 @@ export function Main() {
 
   const generateEntities = async (clap: ClapProject): Promise<ClapProject> => {
     try {
-      setProgress(20)
+      // setProgress(20)
       setAssetGenerationStatus("generating")
       clap = await editClapEntities({
         clap,
@@ -251,13 +183,13 @@ export function Main() {
 
   const generateMusic = async (clap: ClapProject): Promise<ClapProject> => {
     try {
-      setProgress(30)
+      // setProgress(30)
       setMusicGenerationStatus("generating")
 
       clap = await editClapMusic({
         clap,
         turbo: true
-      })
+      }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the music`) }
 
@@ -279,7 +211,7 @@ export function Main() {
 
   const generateStoryboards = async (clap: ClapProject): Promise<ClapProject> => {
     try {
-      setProgress(40)
+      // setProgress(40)
       setImageGenerationStatus("generating")
       clap = await editClapStoryboards({
         clap,
@@ -287,7 +219,7 @@ export function Main() {
         // since this uses a model with character consistency,
         // which is not the case for the non-turbo one
         turbo: true
-      })
+      }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
@@ -310,13 +242,13 @@ export function Main() {
 
   const generateVideos = async (clap: ClapProject): Promise<ClapProject> => {
     try {
-      setProgress(50)
+      // setProgress(50)
       setVideoGenerationStatus("generating")
 
       clap = await editClapVideos({
         clap,
         turbo: true
-      })
+      }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the videos`) }
 
@@ -338,7 +270,7 @@ export function Main() {
 
   const generateDialogues = async (clap: ClapProject): Promise<ClapProject> => {
     try {
-      setProgress(70)
+      // setProgress(70)
       setVoiceGenerationStatus("generating")
       clap = await editClapDialogues({
         clap,
@@ -367,7 +299,7 @@ export function Main() {
 
     let assetUrl = ""
     try {
-      setProgress(85)
+      // setProgress(85)
       setFinalGenerationStatus("generating")
       assetUrl = await exportClapToVideo({
         clap,
@@ -397,14 +329,14 @@ export function Main() {
           generateVideos(clap)
         ])
 
+        console.log("finished processing the 2 tasks in parallel")
+
         for (const newerClap of claps) {
-          console.log("newerClap:", newerClap)
           clap = await updateClap(clap, newerClap, {
             overwriteMeta: false,
             inlineReplace: true,
           })
         }
-        console.log("finalClap: ", clap)
 
         /*
         clap = await claps.reduce(async (existingClap, newerClap) =>
@@ -447,6 +379,54 @@ export function Main() {
     })
   }
 
+
+  const { openFilePicker, filesContent } = useFilePicker({
+    accept: '.clap',
+    readAs: "ArrayBuffer"
+  })
+  const fileData = filesContent[0]
+
+  useEffect(() => {
+    const fn = async () => {
+      if (!fileData?.name) { return }
+
+      const { setStatus, setProgress } = useStore.getState()
+
+      setProgress(0)
+      setStatus("generating")
+
+      try {
+        let clap = await importStory(fileData)
+             
+        const claps = await Promise.all([
+          generateMusic(clap),
+          generateVideos(clap)
+        ])
+
+        // console.log("finished processing the 2 tasks in parallel")
+
+        for (const newerClap of claps) {
+          clap = await updateClap(clap, newerClap, {
+            overwriteMeta: false,
+            inlineReplace: true,
+          })
+        }
+
+        await generateFinalVideo(clap)
+
+        setStatus("finished")
+        setProgress(100)
+        setError("")
+      } catch (err) {
+        console.error(`failed to import: `, err)
+        setStatus("error")
+        setError(`${err}`)
+      }
+     
+    }
+    fn()
+  }, [fileData?.name])
+  
   // note: we are interested in the *current* video orientation,
   // not the requested video orientation requested for the next video
   const isLandscape = currentVideoOrientation === ClapMediaOrientation.LANDSCAPE
@@ -496,10 +476,12 @@ export function Main() {
     })
     */
     useStore.setState({
-      progress: Math.min(maxProgressPerStage[stage], progress + 1) 
+      // progress: Math.min(maxProgressPerStage[stage], progress + 1) 
+      progress: Math.min(100, progress + 1) 
     })
 
-    timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
+    // timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
+    timerRef.current = setTimeout(timerFn, 750)
   }
 
   useEffect(() => {
