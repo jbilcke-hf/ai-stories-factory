@@ -76,7 +76,8 @@ export function Main() {
   const saveClap = useStore(s => s.saveClap)
   const loadClap = useStore(s => s.loadClap)
 
-  const canSeeBetaFeatures = true // getParam<boolean>("beta", false)
+  // let's disable this for now
+  const canSeeBetaFeatures = false // true // getParam<boolean>("beta", false)
 
   const isBusy = useStore(s => s.isBusy)
 
