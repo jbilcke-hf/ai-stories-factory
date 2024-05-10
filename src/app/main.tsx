@@ -462,7 +462,7 @@ export function Main() {
     })
 
     // timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
-    timerRef.current = setTimeout(timerFn, 800)
+    timerRef.current = setTimeout(timerFn, 1000)
   }
 
   useEffect(() => {
