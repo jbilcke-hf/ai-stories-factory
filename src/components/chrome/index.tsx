@@ -2,7 +2,16 @@ import svg1 from "./svg1.svg"
 import svg2 from "./svg2.svg"
 import svg3 from "./svg3.svg"
 
-export function HuggingFaceChrome() {
+export function HuggingFaceChrome({
+  space = "ai-stories-factory",
+  username = "jbilcke-hf",
+  avatar = "https://cdn-avatars.huggingface.co/v1/production/uploads/noauth/2RK8J_YSNAK2ob8XZH7w2.jpeg"
+}: {
+  space: string
+  username: string
+  avatar: string
+}) {
+
   return (
     <div className="
     from-gray-50-to-white text-md shadow-alternate fixed
@@ -13,11 +22,11 @@ export function HuggingFaceChrome() {
     ">
       <div className="flex flex-none items-center">
         <div className="relative mr-1.5 flex items-center">
-          <img alt="" className="w-3.5 h-3.5 rounded-full flex-none" src="https://cdn-avatars.huggingface.co/v1/production/uploads/64f73f25098581ab15e2f5ad/d2mDoZd292LK7j6ZT4mNX.png" crossOrigin="anonymous" />
+          <img alt="" className="w-3.5 h-3.5 rounded-full flex-none" src={`${avatar}`} crossOrigin="anonymous" />
         </div>
-        <a href="/jbilcke-hf" className="hover:text-blue-600">enzostvs</a>
+        <a href={`/${username}`} className="hover:text-blue-600">{username}</a>
         <div className="mx-0.5 text-gray-300">/</div>
-        <a className="font-mono font-semibold text-gray-800 hover:text-blue-600" href="/spaces/jbilcke-hf/ai-stories-factory">ai-stories-factory</a>
+        <a className="font-mono font-semibold text-gray-800 hover:text-blue-600" href={`/spaces/${username}/${space}`}>{space}</a>
       </div>
       <div className="inline-flex items-center overflow-hidden whitespace-nowrap rounded-md border bg-white text-sm leading-none text-gray-500  flex-none self-center ">
         <button className="relative flex items-center overflow-hidden from-red-50 to-transparent dark:from-red-900 p-1 hover:bg-gradient-to-t focus:outline-none" title="Unlike">
