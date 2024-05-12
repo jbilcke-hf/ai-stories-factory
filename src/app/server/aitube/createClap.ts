@@ -16,7 +16,7 @@ export async function createClap({
   turbo?: boolean
 }): Promise<ClapProject> {
   const clap: ClapProject = await apiCreateClap({
-    prompt,
+    prompt: prompt.slice(0, 512),
 
     height: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_LONG : RESOLUTION_SHORT,
     width: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG,
