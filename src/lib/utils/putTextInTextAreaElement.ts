@@ -1,8 +1,8 @@
-export function putTextInInput(input?: HTMLInputElement, text: string = "") {
+export function putTextInTextAreaElement(input?: HTMLTextAreaElement  , text: string = "") {
   if (!input) { return }
 
   const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
+    window.HTMLTextAreaElement.prototype,
     "value"
   )?.set;
 

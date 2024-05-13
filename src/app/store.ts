@@ -7,7 +7,7 @@ import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
 import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
 
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
-import { putTextInInput } from "@/lib/utils/putTextInInput"
+import { putTextInTextAreaElement } from "@/lib/utils/putTextInTextAreaElement"
 
 export const useStore = create<{
   mainCharacterImage: string
@@ -230,7 +230,10 @@ export const useStore = create<{
 
     const storyPrompt = currentClap.meta.description.split("||").pop() || ""
 
-    putTextInInput(document.getElementById("story-prompt-draft") as HTMLInputElement, storyPrompt)
+    putTextInTextAreaElement(
+      document.getElementById("story-prompt-draft") as HTMLTextAreaElement,
+      storyPrompt
+    )
 
     // TODO: parseVideoOrientation should be put inside @aitube/clap (in the utils)
     // const orientation = parseVideoOrientation(currentClap.meta.orientation)

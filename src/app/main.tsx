@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
+import { GiRollingDices } from 'react-icons/gi'
 import { useLocalStorage } from "usehooks-ts"
 import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
@@ -31,6 +32,7 @@ import { Label } from '@/components/form/label'
 import { getParam } from '@/lib/utils/getParam'
 import { GenerationStage } from '@/types'
 import { FileContent } from 'use-file-picker/dist/interfaces'
+import { generateRandomStory } from '@/lib/utils/generateRandomStory'
 
 export function Main() {
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
@@ -641,10 +643,12 @@ export function Main() {
                         inputClassName="
                         transition-all duration-200 ease-in-out
                         h-32 md:h-56 lg:h-64
+                     
                         "
                         disabled={isBusy}
                         value={storyPromptDraft}
                       />
+     
                     
                     {/* END OF MAIN PROMPT INPUT */}
                     </div>
@@ -682,7 +686,8 @@ export function Main() {
                     flex flex-row
                     justify-between items-center
                     space-x-3">
-                    {canSeeBetaFeatures ?
+                      
+                    {/*
                     <Button
                       onClick={openFilePicker}
                       disabled={isBusy}
@@ -697,8 +702,9 @@ export function Main() {
                     >
                       <span className="hidden xl:inline mr-1">Load</span>
                       <span className="inline xl:hidden mr-1">Load</span>
-                    </Button> : <div></div>
-                    }
+                    </Button>
+                    */}
+   
   
                     {canSeeBetaFeatures ?
                     <Button
@@ -725,20 +731,60 @@ export function Main() {
                     space-x-3
                     select-none
                     ">
+
+ 
+                      {/* RANDOMNESS SWITCH */}
+                      <div className=" 
+                      flex flex-row
+                      justify-between items-center
+                      cursor-pointer
+                      transition-all duration-150 ease-in-out
+                      hover:scale-110 active:scale-150
+                     text-stone-800
+                      hover:text-stone-950
+                      active:text-black
+                      group
+                      "
+                      onClick={() => {
+                        const randomStory = generateRandomStory()
+                        setStoryPromptDraft(randomStory)
+                        promptDraftRef.current = randomStory
+                      }}>
+                        <div>
+                        </div>
+                        <div className="
+                        w-6 h-8
+                        flex flex-row items-center justify-center
+                        transition-all duration-150 ease-out
+                        group-hover:animate-swing
+                        "
+                        >
+                          <GiRollingDices size={24} />
+                        </div>
+                      </div>
+                      {/* END OF RANDOMNESS SWITCH */}
+
+
                       {/* ORIENTATION SWITCH */}
                       <div className=" 
                       flex flex-row
                       justify-between items-center
                       cursor-pointer
+                      transition-all duration-150 ease-out
+                      hover:scale-110 active:scale-150
+                      text-stone-800
+                      hover:text-stone-950
+                      active:text-black
+                      group
                       "
                       onClick={() => toggleOrientation()}>
                         <div>
-                        <span className="hidden xl:inline mr-1">Orientation:</span>
-                        <span className="inline xl:hidden mr-1"></span>
                         </div>
                         <div className="
                         w-8 h-8
                         flex flex-row items-center justify-center
+                        transition-all duration-150 ease-in-out
+                        group-hover:animate-swing
                         "
                         >
                           <div className={cn(
@@ -870,6 +916,10 @@ export function Main() {
             
                 </div>
               </DeviceFrameset>
+              
+              {/*
+              <div className={handleDownload}>Download</div>
+                */}
             </div>
           </div>
         </div>
