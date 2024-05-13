@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
 import { GiRollingDices } from 'react-icons/gi'
+import { FaCloudDownloadAlt } from "react-icons/fa"
 import { useLocalStorage } from "usehooks-ts"
 import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
@@ -79,6 +80,7 @@ export function Main() {
   const setCurrentVideo = useStore(s => s.setCurrentVideo)
   const progress = useStore(s => s.progress)
   const setProgress = useStore(s => s.setProgress)
+  const saveVideo = useStore(s => s.saveVideo)
   const saveClap = useStore(s => s.saveClap)
   const loadClap = useStore(s => s.loadClap)
 
@@ -254,7 +256,7 @@ export function Main() {
 
       clap = await editClapVideos({
         clap,
-        turbo: true
+        turbo: false
       }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the videos`) }
@@ -313,9 +315,12 @@ export function Main() {
         turbo: true
       })
 
+      setCurrentVideo(assetUrl)
+
+      if (assetUrl.length < 128) { throw new Error(`handleSubmit(): the generated video is too small, so we failed`) }
+
       console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
       setFinalGenerationStatus("finished")
-      setCurrentVideo(assetUrl)
       return assetUrl
     } catch (err) {
       setFinalGenerationStatus("error")
@@ -873,10 +878,10 @@ export function Main() {
                       )
                       : status === "error"
                       ? <span>{error || ""}</span>
-                      : <span>&nbsp;</span> // to prevent layout changes
+                      : <span>{error ? error : <span>&nbsp;</span>}</span> // to prevent layout changes
                      }</p>
                     </div>
-                  : currentVideo ? <video
+                  : (currentVideo && currentVideo?.length > 128) ? <video
                     src={currentVideo}
                     controls
                     playsInline
@@ -917,9 +922,30 @@ export function Main() {
                 </div>
               </DeviceFrameset>
               
-              {/*
-              <div className={handleDownload}>Download</div>
-                */}
+              {(currentVideo && currentVideo.length > 128) ? <div
+                className={cn(`
+                w-full
+                flex flex-row
+                items-center justify-center
+                transition-all duration-150 ease-in-out
+ 
+               text-stone-800
+          
+                group
+                pt-2 md:pt-4
+                `, 
+                  isBusy ? 'opacity-50' : 'cursor-pointer opacity-100 hover:scale-110 active:scale-150 hover:text-stone-950 active:text-black'
+                )}
+                style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
+                onClick={isBusy ? undefined : saveVideo}
+              >
+                <div className="
+                text-base md:text-lg lg:text-xl
+                transition-all duration-150 ease-out
+                group-hover:animate-swing
+                "><FaCloudDownloadAlt /></div>
+                <div className="text-xs md:text-sm lg:text-base">&nbsp;Download</div>
+              </div> : null}
             </div>
           </div>
         </div>

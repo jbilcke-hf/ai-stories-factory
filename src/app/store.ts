@@ -61,6 +61,7 @@ export const useStore = create<{
 
   setProgress: (progress: number) => void
   setError: (error: string) => void
+  saveVideo: () => Promise<void>
   saveClap: () => Promise<void>
   loadClap: (blob: Blob, fileName?: string) => Promise<ClapProject>
 }>((set, get) => ({
@@ -188,6 +189,35 @@ export const useStore = create<{
   },
   setProgress: (progress: number) => { set({ progress }) },
   setError: (error: string) => { set({ error }) },
+  saveVideo: async (): Promise<void> => {
+    const { currentVideo, storyPrompt } = get()
+
+    if (!currentVideo) { throw new Error(`cannot save a video.. if there is no video`) }
+
+    const currentClapBlob: Blob = await fetch(currentVideo).then(r => r.blob())
+   
+    // Create an object URL for the compressed clap blob
+    const objectUrl = URL.createObjectURL(currentClapBlob)
+  
+    // Create an anchor element and force browser download
+    const anchor = document.createElement("a")
+    anchor.href = objectUrl
+
+    const firstPartOfStoryPrompt = storyPrompt // .split(",").shift() || ""
+
+    const cleanStoryPrompt = firstPartOfStoryPrompt.replace(/([^a-z0-9, ]+)/gi, "_")
+
+    const cleanName = `${cleanStoryPrompt.slice(0, 50)}`
+
+    anchor.download = `${cleanName}.mp4`
+
+    document.body.appendChild(anchor) // Append to the body (could be removed once clicked)
+    anchor.click() // Trigger the download
+  
+    // Cleanup: revoke the object URL and remove the anchor element
+    URL.revokeObjectURL(objectUrl)
+    document.body.removeChild(anchor)
+  },
   saveClap: async (): Promise<void> => {
     const { currentClap , storyPrompt } = get()
 
