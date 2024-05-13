@@ -386,7 +386,7 @@ export function Main() {
       } catch (err) {
         console.error(`failed to generate: `, err)
         setStatus("error")
-        setError(`${err}`)
+        setError(`Error, please contact an admin on Discord (${err})`)
       }
     })
   }
