@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useTransition } from 'react'
 import { IoMdPhonePortrait } from 'react-icons/io'
 import { GiRollingDices } from 'react-icons/gi'
-import { FaCloudDownloadAlt } from "react-icons/fa"
+import { FaCloudDownloadAlt, FaDiscord } from "react-icons/fa"
 import { useLocalStorage } from "usehooks-ts"
 import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
@@ -949,6 +949,30 @@ export function Main() {
             </div>
           </div>
         </div>
+        <a
+          className="
+          fixed
+        
+          left-8
+          bottom-4
+          flex flex-row items-center justify-center
+   
+          no-underline
+          animation-all duration-150 ease-in-out
+          group
+          text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
+          href="https://discord.gg/AEruz9B92B"
+          target="_blank">
+          <div className="
+            text-base md:text-lg lg:text-xl
+            transition-all duration-150 ease-out
+            group-hover:animate-swing
+          "><FaDiscord /></div>
+          <div className="text-xs md:text-sm lg:text-base ml-1.5">
+            <span className="hidden md:block">Join us on Discord</span>
+            <span className="block md:hidden">Discord</span>
+          </div>
+        </a>
       </div>
       <Toaster />
     </div>
