@@ -4,6 +4,7 @@ import { ClapProject } from "@aitube/clap"
 import { editClapEntities as apiEditClapEntities, ClapCompletionMode, ClapEntityPrompt } from "@aitube/client"
 
 import { getToken } from "./getToken"
+import { Workaround } from "./types"
 
 export async function editClapEntities({
   clap,
@@ -13,14 +14,18 @@ export async function editClapEntities({
   clap: ClapProject
   entityPrompts?: ClapEntityPrompt[]
   turbo?: boolean
-}): Promise<ClapProject> {
-  const newClap: ClapProject = await apiEditClapEntities({
-    clap,
-    entityPrompts,
-    completionMode: ClapCompletionMode.MERGE,
-    turbo,
-    token: await getToken()
-  })
+}):  Workaround<ClapProject> {
+  async function promise() {
+    return await apiEditClapEntities({
+      clap,
+      entityPrompts,
+      completionMode: ClapCompletionMode.MERGE,
+      turbo,
+      token: await getToken()
+    })
+  }
 
-  return newClap
+  return { 
+    promise: promise()
+  }
 }

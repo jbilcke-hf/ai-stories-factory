@@ -4,6 +4,7 @@ import { ClapProject } from "@aitube/clap"
 import { editClapDialogues as apiEditClapDialogues, ClapCompletionMode } from "@aitube/client"
 
 import { getToken } from "./getToken"
+import { Workaround } from "./types"
 
 export async function editClapDialogues({
   clap,
@@ -11,13 +12,17 @@ export async function editClapDialogues({
 }: {
   clap: ClapProject
   turbo?: boolean
-}): Promise<ClapProject> {
-  const newClap: ClapProject = await apiEditClapDialogues({
-    clap,
-    completionMode: ClapCompletionMode.MERGE,
-    turbo,
-    token: await getToken()
-  })
+}): Workaround<ClapProject> {
+  async function promise() {
+    return await apiEditClapDialogues({
+      clap,
+      completionMode: ClapCompletionMode.MERGE,
+      turbo,
+      token: await getToken()
+    })
+  }
 
-  return newClap
+  return { 
+    promise: promise()
+  }
 }

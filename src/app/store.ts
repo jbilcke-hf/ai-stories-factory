@@ -67,7 +67,8 @@ export const useStore = create<{
 }>((set, get) => ({
   mainCharacterImage: "",
   mainCharacterVoice: "",
-  storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
+  // storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
+  storyPromptDraft: "underwater footage, coral, fishes",
   storyPrompt: "",
   orientation: ClapMediaOrientation.PORTRAIT,
   status: "idle",
@@ -207,7 +208,7 @@ export const useStore = create<{
 
     const cleanStoryPrompt = firstPartOfStoryPrompt.replace(/([^a-z0-9, ]+)/gi, "_")
 
-    const cleanName = `${cleanStoryPrompt.slice(0, 50)}`
+    const cleanName = `${cleanStoryPrompt.slice(0, 120)}`
 
     anchor.download = `${cleanName}.mp4`
 
@@ -238,7 +239,7 @@ export const useStore = create<{
 
     const cleanStoryPrompt = firstPartOfStoryPrompt.replace(/([^a-z0-9, ]+)/gi, "_")
 
-    const cleanName = `${cleanStoryPrompt.slice(0, 50)}`
+    const cleanName = `${cleanStoryPrompt.slice(0, 120)}`
 
     anchor.download = `${cleanName}.clap`
 

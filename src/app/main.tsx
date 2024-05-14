@@ -34,11 +34,13 @@ import { getParam } from '@/lib/utils/getParam'
 import { GenerationStage } from '@/types'
 import { FileContent } from 'use-file-picker/dist/interfaces'
 import { generateRandomStory } from '@/lib/utils/generateRandomStory'
+import { logImage } from '@/lib/utils/logImage'
 
 export function Main() {
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
     "AI_STORIES_FACTORY_STORY_PROMPT_DRAFT",
-    "Yesterday I was walking in SF when I saw a zebra"
+    // "Yesterday I was walking in SF when I saw a zebra"
+    "underwater footage, coral, fishes"
   )
   const promptDraftRef = useRef("")
   promptDraftRef.current = storyPromptDraft
@@ -143,7 +145,7 @@ export function Main() {
       setCurrentClap(clap)
       setStoryGenerationStatus("finished")
 
-      console.log("-------- GENERATED STORY --------")
+      console.log("---------------- GENERATED STORY ----------------")
       console.table(clap.segments, [
         // 'startTimeInMs',
         'endTimeInMs',
@@ -168,14 +170,14 @@ export function Main() {
         // generating entities requires a "smart" LLM
         turbo: false,
         // turbo: true,
-      })
+      }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the entities`) }
 
       console.log(`handleSubmit(): received a clap with entities = `, clap)
       setCurrentClap(clap)
       setAssetGenerationStatus("finished")
-      console.log("-------- GENERATED ENTITIES --------")
+      console.log("---------------- GENERATED ENTITIES ----------------")
       console.table(clap.entities, [
         'category',
         'label',
@@ -205,7 +207,7 @@ export function Main() {
       console.log(`handleSubmit(): received a clap with music = `, clap)
       setCurrentClap(clap)
       setMusicGenerationStatus("finished")
-      console.log("-------- GENERATED MUSIC --------")
+      console.log("---------------- GENERATED MUSIC ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.MUSIC), [
         'endTimeInMs',
         'prompt',
@@ -227,7 +229,7 @@ export function Main() {
         // the turbo is mandatory here,
         // since this uses a model with character consistency,
         // which is not the case for the non-turbo one
-        turbo: true
+        turbo: false
       }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the storyboards`) }
@@ -236,7 +238,18 @@ export function Main() {
       console.log(`handleSubmit(): received a clap with images = `, clap)
       setCurrentClap(clap)
       setImageGenerationStatus("finished")
-      console.log("-------- GENERATED STORYBOARDS --------")
+      console.log("---------------- GENERATED STORYBOARDS ----------------")
+      clap.segments
+        .filter(s => s.category === ClapSegmentCategory.STORYBOARD)
+        .forEach((s, i) => {
+          if (s.status === "completed" && s.assetUrl) {
+            // console.log(`  [${i}] storyboard: ${s.prompt}`)
+            logImage(s.assetUrl, 0.35)
+          } else {
+            console.log(`  [${i}] failed to generate storyboard`)
+          }
+          // console.log(`------------------`)
+        })
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.STORYBOARD), [
         'endTimeInMs',
         'prompt',
@@ -264,7 +277,7 @@ export function Main() {
       console.log(`handleSubmit(): received a clap with videos = `, clap)
       setCurrentClap(clap)
       setVideoGenerationStatus("finished")
-      console.log("-------- GENERATED VIDEOS --------")
+      console.log("---------------- GENERATED VIDEOS ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.VIDEO), [
         'endTimeInMs',
         'prompt',
@@ -277,6 +290,13 @@ export function Main() {
     }
   }
 
+  const generateStoryboardsThenVideos = async (clap: ClapProject): Promise<ClapProject> => {
+    clap = await generateStoryboards(clap)
+    clap = await generateVideos(clap)
+    return clap
+  }
+
+
   const generateDialogues = async (clap: ClapProject): Promise<ClapProject> => {
     try {
       // setProgress(70)
@@ -284,14 +304,14 @@ export function Main() {
       clap = await editClapDialogues({
         clap,
         turbo: true
-      })
+      }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
       console.log(`handleSubmit(): received a clap with dialogues = `, clap)
       setCurrentClap(clap)
       setVoiceGenerationStatus("finished")
-      console.log("-------- GENERATED DIALOGUES --------")
+      console.log("---------------- GENERATED DIALOGUES ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.DIALOGUE), [
         'endTimeInMs',
         'prompt',
@@ -319,7 +339,7 @@ export function Main() {
 
       if (assetUrl.length < 128) { throw new Error(`handleSubmit(): the generated video is too small, so we failed`) }
 
-      console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 60)}...`)
+      console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 120)}...`)
       setFinalGenerationStatus("finished")
       return assetUrl
     } catch (err) {
@@ -336,12 +356,14 @@ export function Main() {
       try {
         let clap = await generateStory()
         
-        const claps = await Promise.all([
+        const tasks = [
           generateMusic(clap),
-          generateVideos(clap)
-        ])
+          generateStoryboardsThenVideos(clap)
+        ]
 
-        console.log("finished processing the 2 tasks in parallel")
+        const claps = await Promise.all(tasks)
+
+        console.log(`finished processing ${tasks.length} tasks in parallel`)
 
         for (const newerClap of claps) {
           clap = await updateClap(clap, newerClap, {
@@ -379,6 +401,9 @@ export function Main() {
         // clap = await generateVideos(clap)
         // clap = await generateDialogues(clap)
      
+        
+        
+        console.log("final clap: ", clap)
         await generateFinalVideo(clap)
 
         setStatus("finished")
@@ -644,7 +669,8 @@ export function Main() {
                           setStoryPromptDraft(e.target.value)
                           promptDraftRef.current = e.target.value
                         }}
-                        placeholder="Yesterday I was at my favorite pizza place and.."
+                        // placeholder="Yesterday I was at my favorite pizza place and.."
+                        placeholder="underwater footage, coral, fishes"
                         inputClassName="
                         transition-all duration-200 ease-in-out
                         h-32 md:h-56 lg:h-64
@@ -873,7 +899,7 @@ export function Main() {
                         : imageGenerationStatus === "generating" ? "Creating storyboards.."
                         : videoGenerationStatus === "generating" ? "Filming shots.."
                         : voiceGenerationStatus === "generating" ? "Recording dialogues.."
-                        : finalGenerationStatus === "generating" ? "Assembling final cut.."
+                        : finalGenerationStatus === "generating" ? "Editing final cut.."
                         : "Please wait.."
                       )
                       : status === "error"
@@ -914,7 +940,7 @@ export function Main() {
                     Powered by
                   </span>
                   <span className="ml-1 mr-0.5">
-                    <Image src={HFLogo} alt="Hugging Face" width="14" height="14" />
+                    <Image src={HFLogo} alt="Hugging Face" width={14} height={13} />
                   </span>
                   <span className="text-stone-100/80 text-3xs font-semibold"
                     style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>Hugging Face</span>
