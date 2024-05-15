@@ -396,7 +396,7 @@ export function Main() {
         let clap = await generateStory()
         
         const tasks = [
-          // generateMusic(clap),
+          generateMusic(clap),
           generateStoryboardsThenVideos(clap)
         ]
 
@@ -475,7 +475,7 @@ export function Main() {
         let clap = await importStory(fileData)
              
         const claps = await Promise.all([
-          // generateMusic(clap),
+          generateMusic(clap),
           generateVideos(clap)
         ])
 
