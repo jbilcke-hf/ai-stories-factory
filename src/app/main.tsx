@@ -92,7 +92,7 @@ export function Main() {
   const loadClap = useStore(s => s.loadClap)
 
   // let's disable this for now
-  const canSeeBetaFeatures = false // true // getParam<boolean>("beta", false)
+  const canSeeBetaFeatures = true // getParam<boolean>("beta", false)
 
   const isBusy = useStore(s => s.isBusy)
   const busyRef = useRef(isBusy)
@@ -972,8 +972,8 @@ export function Main() {
                         : assetGenerationStatus === "generating" ? "Casting characters.."
                         : imageGenerationStatus === "generating" ? "Creating storyboards.."
                         : soundGenerationStatus === "generating" ? "Recording sounds.."
-                        : musicGenerationStatus === "generating" ? "Producing music.."
                         : videoGenerationStatus === "generating" ? "Filming shots.."
+                        : musicGenerationStatus === "generating" ? "Producing music.."
                         : voiceGenerationStatus === "generating" ? "Recording dialogues.."
                         : finalGenerationStatus === "generating" ? "Editing final cut.."
                         : "Please wait.."
