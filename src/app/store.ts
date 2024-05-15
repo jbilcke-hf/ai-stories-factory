@@ -1,6 +1,6 @@
 "use client"
 
-import { ClapProject, parseClap, serializeClap, ClapMediaOrientation } from "@aitube/clap"
+import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
@@ -288,10 +288,7 @@ export const useStore = create<{
       storyPrompt
     )
 
-    // TODO: parseVideoOrientation should be put inside @aitube/clap (in the utils)
-    // const orientation = parseVideoOrientation(currentClap.meta.orientation)
-    // let's use the UI settings for now
-    const { orientation } = get()
+    const orientation = parseMediaOrientation(currentClap.meta.orientation)
 
     currentClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
     currentClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG

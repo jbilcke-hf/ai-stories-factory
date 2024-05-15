@@ -182,7 +182,6 @@ export function Main() {
       if (!clap) { throw new Error(`failed to edit the entities`) }
 
       console.log(`handleSubmit(): received a clap with entities = `, clap)
-      setCurrentClap(clap)
       setAssetGenerationStatus("finished")
       console.log("---------------- GENERATED ENTITIES ----------------")
       console.table(clap.entities, [
@@ -211,7 +210,6 @@ export function Main() {
       if (!clap) { throw new Error(`failed to edit the sound`) }
 
       console.log(`handleSubmit(): received a clap with sound = `, clap)
-      setCurrentClap(clap)
       setSoundGenerationStatus("finished")
       console.log("---------------- GENERATED SOUND ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.SOUND), [
@@ -239,7 +237,6 @@ export function Main() {
       if (!clap) { throw new Error(`failed to edit the music`) }
 
       console.log(`handleSubmit(): received a clap with music = `, clap)
-      setCurrentClap(clap)
       setMusicGenerationStatus("finished")
       console.log("---------------- GENERATED MUSIC ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.MUSIC), [
@@ -270,7 +267,6 @@ export function Main() {
 
       // const fusion = 
       console.log(`handleSubmit(): received a clap with images = `, clap)
-      setCurrentClap(clap)
       setImageGenerationStatus("finished")
       console.log("---------------- GENERATED STORYBOARDS ----------------")
       clap.segments
@@ -309,7 +305,6 @@ export function Main() {
       if (!clap) { throw new Error(`failed to edit the videos`) }
 
       console.log(`handleSubmit(): received a clap with videos = `, clap)
-      setCurrentClap(clap)
       setVideoGenerationStatus("finished")
       console.log("---------------- GENERATED VIDEOS ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.VIDEO), [
@@ -343,7 +338,6 @@ export function Main() {
       if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
       console.log(`handleSubmit(): received a clap with dialogues = `, clap)
-      setCurrentClap(clap)
       setVoiceGenerationStatus("finished")
       console.log("---------------- GENERATED DIALOGUES ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.DIALOGUE), [
@@ -371,9 +365,9 @@ export function Main() {
 
       setCurrentVideo(assetUrl)
 
-      if (assetUrl.length < 128) { throw new Error(`handleSubmit(): the generated video is too small, so we failed`) }
+      if (assetUrl.length < 128) { throw new Error(`generateFinalVideo(): the generated video is too small, so we failed`) }
 
-      console.log(`handleSubmit(): received a video: ${assetUrl.slice(0, 120)}...`)
+      console.log(`generateFinalVideo(): received a video: ${assetUrl.slice(0, 120)}...`)
       setFinalGenerationStatus("finished")
       return assetUrl
     } catch (err) {
@@ -395,6 +389,8 @@ export function Main() {
       try {
         let clap = await generateStory()
         
+        setCurrentClap(clap)
+
         const tasks = [
           generateMusic(clap),
           generateStoryboardsThenVideos(clap)
@@ -409,6 +405,7 @@ export function Main() {
             overwriteMeta: false,
             inlineReplace: true,
           })
+          setCurrentClap(clap)
         }
 
         /*
@@ -443,6 +440,7 @@ export function Main() {
         
         
         console.log("final clap: ", clap)
+        setCurrentClap(clap)
         await generateFinalVideo(clap)
 
         setStatus("finished")
@@ -473,7 +471,8 @@ export function Main() {
 
       try {
         let clap = await importStory(fileData)
-             
+        
+        console.log("loadClap(): clap = ", clap)
         const claps = await Promise.all([
           generateMusic(clap),
           generateVideos(clap)
@@ -488,6 +487,7 @@ export function Main() {
           })
         }
 
+        setCurrentClap(clap)
         await generateFinalVideo(clap)
 
         setStatus("finished")
@@ -789,8 +789,8 @@ export function Main() {
                     justify-between items-center
                     space-x-3">
                       
-                    {/*
-                    <Button
+               
+                    {canSeeBetaFeatures && <Button
                       onClick={openFilePicker}
                       disabled={isBusy}
                       // variant="ghost"
@@ -804,8 +804,8 @@ export function Main() {
                     >
                       <span className="hidden xl:inline mr-1">Load</span>
                       <span className="inline xl:hidden mr-1">Load</span>
-                    </Button>
-                    */}
+                    </Button>}
+              
    
   
                     {canSeeBetaFeatures ?
