@@ -7,6 +7,7 @@ import { FaCloudDownloadAlt, FaDiscord } from "react-icons/fa"
 import { useLocalStorage } from "usehooks-ts"
 import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
 import Image from 'next/image'
+import { useSearchParams } from "next/navigation"
 import { useFilePicker } from 'use-file-picker'
 import { DeviceFrameset } from 'react-device-frameset'
 import 'react-device-frameset/styles/marvel-devices.min.css'
@@ -21,6 +22,7 @@ import { createClap } from './server/aitube/createClap'
 import { editClapEntities } from './server/aitube/editClapEntities'
 import { editClapDialogues } from './server/aitube/editClapDialogues'
 import { editClapStoryboards } from './server/aitube/editClapStoryboards'
+import { editClapSounds } from './server/aitube/editClapSounds'
 import { editClapMusic } from './server/aitube/editClapMusic'
 import { editClapVideos } from './server/aitube/editClapVideos'
 import { exportClapToVideo } from './server/aitube/exportClapToVideo'
@@ -35,12 +37,12 @@ import { GenerationStage } from '@/types'
 import { FileContent } from 'use-file-picker/dist/interfaces'
 import { generateRandomStory } from '@/lib/utils/generateRandomStory'
 import { logImage } from '@/lib/utils/logImage'
+import { defaultPrompt } from './config'
 
 export function Main() {
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
     "AI_STORIES_FACTORY_STORY_PROMPT_DRAFT",
-    // "Yesterday I was walking in SF when I saw a zebra"
-    "underwater footage, coral, fishes"
+    defaultPrompt
   )
   const promptDraftRef = useRef("")
   promptDraftRef.current = storyPromptDraft
@@ -51,10 +53,12 @@ export function Main() {
   const mainCharacterImage = useStore(s => s.mainCharacterImage)
   const mainCharacterVoice = useStore(s => s.mainCharacterVoice)
   const orientation = useStore(s => s.orientation)
+  const setOrientation = useStore(s => s.setOrientation)
   const status = useStore(s => s.status)
   const parseGenerationStatus = useStore(s => s.parseGenerationStatus)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
   const assetGenerationStatus = useStore(s => s.assetGenerationStatus)
+  const soundGenerationStatus = useStore(s => s.soundGenerationStatus)
   const musicGenerationStatus = useStore(s => s.musicGenerationStatus)
   const voiceGenerationStatus = useStore(s => s.voiceGenerationStatus)
   const imageGenerationStatus = useStore(s => s.imageGenerationStatus)
@@ -73,6 +77,7 @@ export function Main() {
   const setParseGenerationStatus = useStore(s => s.setParseGenerationStatus)
   const setStoryGenerationStatus = useStore(s => s.setStoryGenerationStatus)
   const setAssetGenerationStatus = useStore(s => s.setAssetGenerationStatus)
+  const setSoundGenerationStatus = useStore(s => s.setSoundGenerationStatus)
   const setMusicGenerationStatus = useStore(s => s.setMusicGenerationStatus)
   const setVoiceGenerationStatus = useStore(s => s.setVoiceGenerationStatus)
   const setImageGenerationStatus = useStore(s => s.setImageGenerationStatus)
@@ -90,6 +95,8 @@ export function Main() {
   const canSeeBetaFeatures = false // true // getParam<boolean>("beta", false)
 
   const isBusy = useStore(s => s.isBusy)
+  const busyRef = useRef(isBusy)
+  busyRef.current = isBusy
 
   const importStory = async (fileData: FileContent<ArrayBuffer>): Promise<ClapProject> => {
     if (!fileData?.name) { throw new Error(`invalid file (missing file name)`) }
@@ -191,6 +198,33 @@ export function Main() {
     }
   }
 
+  const generateSounds = async (clap: ClapProject): Promise<ClapProject> => {
+    try {
+      // setProgress(30)
+      setSoundGenerationStatus("generating")
+
+      clap = await editClapSounds({
+        clap,
+        turbo: true
+      }).then(r => r.promise)
+
+      if (!clap) { throw new Error(`failed to edit the sound`) }
+
+      console.log(`handleSubmit(): received a clap with sound = `, clap)
+      setCurrentClap(clap)
+      setSoundGenerationStatus("finished")
+      console.log("---------------- GENERATED SOUND ----------------")
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.SOUND), [
+        'endTimeInMs',
+        'prompt',
+        'entityId',
+      ])
+      return clap
+    } catch (err) {
+      setSoundGenerationStatus("error")
+      throw err
+    }
+  }
 
   const generateMusic = async (clap: ClapProject): Promise<ClapProject> => {
     try {
@@ -226,10 +260,10 @@ export function Main() {
       setImageGenerationStatus("generating")
       clap = await editClapStoryboards({
         clap,
-        // the turbo is mandatory here,
-        // since this uses a model with character consistency,
-        // which is not the case for the non-turbo one
-        turbo: false
+        // if we use entities, then we MUST use turbo
+        // that's because turbo uses PulID,
+        // but SDXL doesn't
+        turbo: true,
       }).then(r => r.promise)
 
       if (!clap) { throw new Error(`failed to edit the storyboards`) }
@@ -349,15 +383,20 @@ export function Main() {
   }
   
   const handleSubmit = async () => {
+    setStatus("generating")
+    busyRef.current = true
 
     startTransition(async () => {
+      setStatus("generating")
+      busyRef.current = true
+  
       console.log(`handleSubmit(): generating a clap using prompt = "${promptDraftRef.current}" `)
 
       try {
         let clap = await generateStory()
         
         const tasks = [
-          generateMusic(clap),
+          // generateMusic(clap),
           generateStoryboardsThenVideos(clap)
         ]
 
@@ -436,7 +475,7 @@ export function Main() {
         let clap = await importStory(fileData)
              
         const claps = await Promise.all([
-          generateMusic(clap),
+          // generateMusic(clap),
           generateVideos(clap)
         ])
 
@@ -494,7 +533,7 @@ export function Main() {
     })
 
     // timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
-    timerRef.current = setTimeout(timerFn, 1000)
+    timerRef.current = setTimeout(timerFn, 1200)
   }
 
   useEffect(() => {
@@ -503,6 +542,39 @@ export function Main() {
     if (!isBusy) { return }
     timerRef.current = setTimeout(timerFn, 0)
   }, [isBusy])
+
+  // this is how we support query string parameters
+  // ?prompt=hello <- set a default prompt
+  // ?prompt=hello&autorun=true <- automatically run the app
+  // ?orientation=landscape <- can be "landscape" or "portrait" (default)
+  const searchParams = useSearchParams()
+  const queryStringPrompt = (searchParams?.get('prompt') as string) || ""
+  const queryStringAutorun = (searchParams?.get('autorun') as string) || ""
+  const queryStringOrientation = (searchParams?.get('orientation') as string) || ""
+  useEffect(() => {
+    if (queryStringOrientation?.length > 1) {
+      console.log(`orientation = "${queryStringOrientation}"`)
+      const orientation =
+        queryStringOrientation.trim().toLowerCase() === "landscape"
+        ? ClapMediaOrientation.LANDSCAPE
+        : ClapMediaOrientation.PORTRAIT
+      setOrientation(orientation)
+    }
+    if (queryStringPrompt?.length > 1) {
+      console.log(`prompt = "${queryStringPrompt}"`)
+      if (queryStringPrompt !== promptDraftRef.current) {
+        setStoryPromptDraft(queryStringPrompt)
+      }
+      const maybeAutorun = queryStringAutorun.trim().toLowerCase()
+      console.log(`autorun = "${maybeAutorun}"`)
+
+      // note: during development we will be called twice,
+      // which is why we have a guard on  busyRef.current
+      if (maybeAutorun === "true" || maybeAutorun === "1" && !busyRef.current) {
+        handleSubmit()
+      }
+    }
+  }, [queryStringPrompt, queryStringAutorun, queryStringOrientation])
 
   return (
     <div className={cn(
@@ -669,8 +741,7 @@ export function Main() {
                           setStoryPromptDraft(e.target.value)
                           promptDraftRef.current = e.target.value
                         }}
-                        // placeholder="Yesterday I was at my favorite pizza place and.."
-                        placeholder="underwater footage, coral, fishes"
+                        placeholder={defaultPrompt}
                         inputClassName="
                         transition-all duration-200 ease-in-out
                         h-32 md:h-56 lg:h-64
@@ -892,11 +963,16 @@ export function Main() {
                     <p className="text-2xl font-bold">{progress}%</p> 
                     <p className="text-base text-white/70">{isBusy
                       ? (
+                        // note: some of those tasks are running in parallel,
+                        // and some are super-slow (like music or video)
+                        // by carefully selecting in which order we set the ternaries,
+                        // we can create the illusion that we just have a succession of reasonably-sized tasks
                         storyGenerationStatus === "generating" ? "Writing story.."
                         : parseGenerationStatus === "generating" ? "Loading the project.."
                         : assetGenerationStatus === "generating" ? "Casting characters.."
-                        : musicGenerationStatus === "generating" ? "Producing music.."
                         : imageGenerationStatus === "generating" ? "Creating storyboards.."
+                        : soundGenerationStatus === "generating" ? "Recording sounds.."
+                        : musicGenerationStatus === "generating" ? "Producing music.."
                         : videoGenerationStatus === "generating" ? "Filming shots.."
                         : voiceGenerationStatus === "generating" ? "Recording dialogues.."
                         : finalGenerationStatus === "generating" ? "Editing final cut.."

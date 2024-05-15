@@ -13,6 +13,7 @@ export type GlobalStatus =
 export type GenerationStage =
   | "story"
   | "entities"
+  | "sounds"
   | "music"
   | "voices"
   | "images"

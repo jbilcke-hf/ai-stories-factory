@@ -8,6 +8,7 @@ import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
 
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
 import { putTextInTextAreaElement } from "@/lib/utils/putTextInTextAreaElement"
+import { defaultPrompt } from "./config"
 
 export const useStore = create<{
   mainCharacterImage: string
@@ -24,6 +25,7 @@ export const useStore = create<{
   parseGenerationStatus: TaskStatus
   storyGenerationStatus: TaskStatus
   assetGenerationStatus: TaskStatus
+  soundGenerationStatus: TaskStatus
   musicGenerationStatus: TaskStatus
   voiceGenerationStatus: TaskStatus
   imageGenerationStatus: TaskStatus
@@ -40,6 +42,7 @@ export const useStore = create<{
   progress: number
   error: string
   toggleOrientation: () => void
+  setOrientation: (orientation: ClapMediaOrientation) => void
   setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => void
   setMainCharacterImage: (mainCharacterImage: string) => void
   setMainCharacterVoice: (mainCharacterVoice: string) => void
@@ -48,6 +51,7 @@ export const useStore = create<{
   setParseGenerationStatus: (parseGenerationStatus: TaskStatus) => void
   setStoryGenerationStatus: (storyGenerationStatus: TaskStatus) => void
   setAssetGenerationStatus: (assetGenerationStatus: TaskStatus) => void
+  setSoundGenerationStatus: (soundGenerationStatus: TaskStatus) => void
   setMusicGenerationStatus: (musicGenerationStatus: TaskStatus) => void
   setVoiceGenerationStatus: (voiceGenerationStatus: TaskStatus) => void
   setImageGenerationStatus: (imageGenerationStatus: TaskStatus) => void
@@ -67,8 +71,7 @@ export const useStore = create<{
 }>((set, get) => ({
   mainCharacterImage: "",
   mainCharacterVoice: "",
-  // storyPromptDraft: "Yesterday I was at my favorite pizza place and..",
-  storyPromptDraft: "underwater footage, coral, fishes",
+  storyPromptDraft: defaultPrompt,
   storyPrompt: "",
   orientation: ClapMediaOrientation.PORTRAIT,
   status: "idle",
@@ -76,6 +79,7 @@ export const useStore = create<{
   parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
   assetGenerationStatus: "idle",
+  soundGenerationStatus: "idle",
   musicGenerationStatus: "idle",
   voiceGenerationStatus: "idle",
   imageGenerationStatus: "idle",
@@ -93,6 +97,19 @@ export const useStore = create<{
       previousOrientation === ClapMediaOrientation.LANDSCAPE
       ? ClapMediaOrientation.PORTRAIT
       : ClapMediaOrientation.LANDSCAPE
+
+    set({
+      orientation,
+
+      // we normally don't touch the currentVideoOrientation since it will already contain a video
+      currentVideoOrientation:
+        currentVideo
+        ? currentVideoOrientation
+        : orientation
+    })
+  },
+  setOrientation: (orientation: ClapMediaOrientation) => {
+    const { currentVideoOrientation, currentVideo } = get()
 
     set({
       orientation,
@@ -124,6 +141,10 @@ export const useStore = create<{
     set({ assetGenerationStatus })
     get().syncStatusAndStageState()
   },
+  setSoundGenerationStatus: (soundGenerationStatus: TaskStatus) => {
+    set({ soundGenerationStatus })
+    get().syncStatusAndStageState()
+  },
   setMusicGenerationStatus: (musicGenerationStatus: TaskStatus) => {
     set({ musicGenerationStatus })
     get().syncStatusAndStageState()
@@ -145,7 +166,7 @@ export const useStore = create<{
     get().syncStatusAndStageState()
   },
   syncStatusAndStageState: () => {
-    const { status, storyGenerationStatus, assetGenerationStatus, musicGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus, finalGenerationStatus } = get()
+    const { status, storyGenerationStatus, assetGenerationStatus, soundGenerationStatus, musicGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus, finalGenerationStatus } = get()
 
     // note: we don't really have "stages" since some things run in parallel,
     // and some parallel tasks may finish before the others
@@ -154,6 +175,7 @@ export const useStore = create<{
       storyGenerationStatus === "generating" ? "story" :
       assetGenerationStatus === "generating" ? "entities" :
       musicGenerationStatus === "generating" ? "music" :
+      soundGenerationStatus === "generating" ? "sounds" :
       voiceGenerationStatus === "generating" ? "voices" :
       imageGenerationStatus === "generating" ? "images" :
       videoGenerationStatus === "generating" ? "videos" :
