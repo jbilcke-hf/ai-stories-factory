@@ -474,11 +474,9 @@ export function Main() {
       try {
         let clap = await importStory(fileData)
         
-        clap = await generateSounds(clap)
+        // clap = await generateSounds(clap)
 
-        setCurrentClap(clap)
-
-        throw new Error("this was just a test")
+        // setCurrentClap(clap)
 
         console.log("loadClap(): clap = ", clap)
         const claps = await Promise.all([
