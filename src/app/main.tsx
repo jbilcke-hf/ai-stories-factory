@@ -1,43 +1,44 @@
 "use client"
 
-import React, { useEffect, useRef, useTransition } from 'react'
-import { IoMdPhonePortrait } from 'react-icons/io'
-import { GiRollingDices } from 'react-icons/gi'
+import React, { useEffect, useRef, useTransition } from "react"
+import { IoMdPhonePortrait } from "react-icons/io"
+import { GiRollingDices } from "react-icons/gi"
 import { FaCloudDownloadAlt, FaDiscord } from "react-icons/fa"
+import { GiSpellBook } from "react-icons/gi"
 import { useLocalStorage } from "usehooks-ts"
-import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from '@aitube/clap'
-import Image from 'next/image'
+import { ClapProject, ClapMediaOrientation, ClapSegmentCategory, updateClap } from "@aitube/clap"
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
-import { useFilePicker } from 'use-file-picker'
-import { DeviceFrameset } from 'react-device-frameset'
-import 'react-device-frameset/styles/marvel-devices.min.css'
+import { useFilePicker } from "use-file-picker"
+import { DeviceFrameset } from "react-device-frameset"
+import "react-device-frameset/styles/marvel-devices.min.css"
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Toaster } from '@/components/ui/sonner'
-import { TextareaField } from '@/components/form/textarea-field'
-import { cn } from '@/lib/utils/cn'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Toaster } from "@/components/ui/sonner"
+import { TextareaField } from "@/components/form/textarea-field"
+import { cn } from "@/lib/utils/cn"
 
-import { createClap } from './server/aitube/createClap'
-import { editClapEntities } from './server/aitube/editClapEntities'
-import { editClapDialogues } from './server/aitube/editClapDialogues'
-import { editClapStoryboards } from './server/aitube/editClapStoryboards'
-import { editClapSounds } from './server/aitube/editClapSounds'
-import { editClapMusic } from './server/aitube/editClapMusic'
-import { editClapVideos } from './server/aitube/editClapVideos'
-import { exportClapToVideo } from './server/aitube/exportClapToVideo'
+import { createClap } from "./server/aitube/createClap"
+import { editClapEntities } from "./server/aitube/editClapEntities"
+import { editClapDialogues } from "./server/aitube/editClapDialogues"
+import { editClapStoryboards } from "./server/aitube/editClapStoryboards"
+import { editClapSounds } from "./server/aitube/editClapSounds"
+import { editClapMusic } from "./server/aitube/editClapMusic"
+import { editClapVideos } from "./server/aitube/editClapVideos"
+import { exportClapToVideo } from "./server/aitube/exportClapToVideo"
 
-import { useStore } from './store'
+import { useStore } from "./store"
 import HFLogo from "./hf-logo.svg"
-import { Input } from '@/components/ui/input'
-import { Field } from '@/components/form/field'
-import { Label } from '@/components/form/label'
-import { getParam } from '@/lib/utils/getParam'
-import { GenerationStage } from '@/types'
-import { FileContent } from 'use-file-picker/dist/interfaces'
-import { generateRandomStory } from '@/lib/utils/generateRandomStory'
-import { logImage } from '@/lib/utils/logImage'
-import { defaultPrompt } from './config'
+import { Input } from "@/components/ui/input"
+import { Field } from "@/components/form/field"
+import { Label } from "@/components/form/label"
+import { getParam } from "@/lib/utils/getParam"
+import { GenerationStage } from "@/types"
+import { FileContent } from "use-file-picker/dist/interfaces"
+import { generateRandomStory } from "@/lib/utils/generateRandomStory"
+import { logImage } from "@/lib/utils/logImage"
+import { defaultPrompt } from "./config"
 
 export function Main() {
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
@@ -472,6 +473,12 @@ export function Main() {
       try {
         let clap = await importStory(fileData)
         
+        clap = await generateSounds(clap)
+
+        setCurrentClap(clap)
+
+        throw new Error("this was just a test")
+
         console.log("loadClap(): clap = ", clap)
         const claps = await Promise.all([
           generateMusic(clap),
@@ -1051,30 +1058,56 @@ export function Main() {
             </div>
           </div>
         </div>
-        <a
+        <div
           className="
-          fixed
-        
-          left-8
-          bottom-4
-          flex flex-row items-center justify-center
-   
-          no-underline
-          animation-all duration-150 ease-in-out
-          group
-          text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
-          href="https://discord.gg/AEruz9B92B"
-          target="_blank">
-          <div className="
-            text-base md:text-lg lg:text-xl
-            transition-all duration-150 ease-out
-            group-hover:animate-swing
-          "><FaDiscord /></div>
-          <div className="text-xs md:text-sm lg:text-base ml-1.5">
-            <span className="hidden md:block">Join us on Discord</span>
-            <span className="block md:hidden">Discord</span>
-          </div>
-        </a>
+            fixed
+          
+            left-8
+            bottom-4
+            flex flex-col md:flex-row
+            items-center justify-center
+            space-y-4 md:space-x-4 md:space-y-0
+    
+           ">
+          <a
+            className="
+            flex
+            no-underline
+            animation-all duration-150 ease-in-out
+            group
+            text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
+            href="https://discord.gg/AEruz9B92B"
+            target="_blank">
+            <div className="
+              text-base md:text-lg lg:text-xl
+              transition-all duration-150 ease-out
+              group-hover:animate-swing
+            "><FaDiscord /></div>
+            <div className="text-xs md:text-sm lg:text-base ml-1.5">
+              <span className="hidden md:block">Chat on Discord</span>
+              <span className="block md:hidden">Discord</span>
+            </div>
+          </a>
+          <a
+            className="
+            flex
+            no-underline
+            animation-all duration-150 ease-in-out
+            group
+            text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
+            href="https://latent-store.notion.site/AI-Stories-Academy-8e3ce6ff2d5946ffadc94193619dd5cd"
+            target="_blank">
+            <div className="
+              text-base md:text-lg lg:text-xl
+              transition-all duration-150 ease-out
+              group-hover:animate-swing
+            "><GiSpellBook /></div>
+            <div className="text-xs md:text-sm lg:text-base ml-1.5">
+              <span className="hidden md:block">Prompt spells</span>
+              <span className="block md:hidden">Prompt spells</span>
+            </div>
+          </a>
+        </div>
       </div>
       <Toaster />
     </div>
