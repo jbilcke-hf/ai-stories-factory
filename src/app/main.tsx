@@ -100,27 +100,26 @@ export function Main() {
   const busyRef = useRef(isBusy)
   busyRef.current = isBusy
 
-  const importStory = async (fileData: FileContent<ArrayBuffer>): Promise<ClapProject> => {
+  const importStory = async (fileData: FileContent<ArrayBuffer>): Promise<{
+    clap: ClapProject
+    regenerateVideo: boolean
+  }> => {
     if (!fileData?.name) { throw new Error(`invalid file (missing file name)`) }
 
     const {
-      setStatus,
-      setProgress,
       setParseGenerationStatus,
     } = useStore.getState()
-
-    let clap: ClapProject | undefined = undefined
 
     setParseGenerationStatus("generating")
 
     try {
       const blob = new Blob([fileData.content])
-      clap = await loadClap(blob, fileData.name)
+      const res = await loadClap(blob, fileData.name)
 
-      if (!clap) { throw new Error(`failed to load the clap file`) }
+      if (!res?.clap) { throw new Error(`failed to load the clap file`) }
+
       setParseGenerationStatus("finished")
-      setCurrentClap(clap)
-      return clap
+      return res
     } catch (err) {
       console.error("failed to load the Clap file:", err)
       setParseGenerationStatus("error")
@@ -472,29 +471,39 @@ export function Main() {
       setStatus("generating")
 
       try {
-        let clap = await importStory(fileData)
+        let { clap, regenerateVideo } = await importStory(fileData)
         
         // clap = await generateSounds(clap)
 
         // setCurrentClap(clap)
 
         console.log("loadClap(): clap = ", clap)
-        const claps = await Promise.all([
-          generateMusic(clap),
-          generateVideos(clap)
-        ])
 
-        // console.log("finished processing the 2 tasks in parallel")
+        // it is important to skip regeneration if we already have a video
+        if (regenerateVideo) {
+          console.log(`regenerating music and videos..`)
+          const claps = await Promise.all([
+            generateMusic(clap),
+            generateVideos(clap)
+          ])
 
-        for (const newerClap of claps) {
-          clap = await updateClap(clap, newerClap, {
-            overwriteMeta: false,
-            inlineReplace: true,
-          })
+          // console.log("finished processing the 2 tasks in parallel")
+
+          for (const newerClap of claps) {
+            clap = await updateClap(clap, newerClap, {
+              overwriteMeta: false,
+              inlineReplace: true,
+            })
+          }
+
+
+          setCurrentClap(clap)
+
+          await generateFinalVideo(clap)
+
+        } else {
+          console.log(`skipping music and video regeneration`)
         }
-
-        setCurrentClap(clap)
-        await generateFinalVideo(clap)
 
         setStatus("finished")
         setProgress(100)
@@ -805,8 +814,8 @@ export function Main() {
                 
                       {canSeeBetaFeatures && 
                         <Tooltip>
-                          <TooltipTrigger>
-                            <Button
+                          <TooltipTrigger asChild><Button
+              
                             onClick={openFilePicker}
                             disabled={isBusy}
                             // variant="ghost"
@@ -820,8 +829,7 @@ export function Main() {
                           >
                             <span className="hidden xl:inline mr-1">Load .clap</span>
                             <span className="inline xl:hidden mr-1">Load .clap</span>
-                          </Button>
-                        </TooltipTrigger>
+                          </Button></TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="text-xs font-normal text-stone-100/90 text-center">
                             Clap is a new AI format,<br/>check out the academy<br/>to learn more about it.
@@ -833,8 +841,7 @@ export function Main() {
     
                       {canSeeBetaFeatures &&
                         <Tooltip>
-                          <TooltipTrigger>
-                            <Button
+                          <TooltipTrigger asChild><Button
                         onClick={() => saveClap()}
                         disabled={!currentClap || isBusy}
                         // variant="ghost"
@@ -848,7 +855,7 @@ export function Main() {
                       >
                         <span className="hidden xl:inline mr-1">Save .clap</span>
                         <span className="inline xl:hidden mr-1">Save .clap</span>
-                      </Button> </TooltipTrigger>
+                      </Button></TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="text-xs font-normal text-stone-100/90 text-center">
                           Clap is a new AI format,<br/>check out the academy<br/>to learn more about it.

@@ -1,6 +1,6 @@
 "use client"
 
-import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation } from "@aitube/clap"
+import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation, ClapSegmentCategory, newSegment, getClapAssetSourceType } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
@@ -67,7 +67,10 @@ export const useStore = create<{
   setError: (error: string) => void
   saveVideo: () => Promise<void>
   saveClap: () => Promise<void>
-  loadClap: (blob: Blob, fileName?: string) => Promise<ClapProject>
+  loadClap: (blob: Blob, fileName?: string) => Promise<{
+    clap: ClapProject
+    regenerateVideo: boolean
+  }>
 }>((set, get) => ({
   mainCharacterImage: "",
   mainCharacterVoice: "",
@@ -242,12 +245,43 @@ export const useStore = create<{
     document.body.removeChild(anchor)
   },
   saveClap: async (): Promise<void> => {
-    const { currentClap , storyPrompt } = get()
+    const { currentClap , storyPrompt, currentVideo } = get()
 
     if (!currentClap) { throw new Error(`cannot save a clap.. if there is no clap`) }
 
     currentClap.meta.description = storyPrompt
 
+    // make sure we update the total duration
+    for (const s of currentClap.segments) {
+      if (s.endTimeInMs > currentClap.meta.durationInMs) {
+        currentClap.meta.durationInMs = s.endTimeInMs
+      }
+    }
+
+    const alreadyAnEmbeddedFinalVideo = currentClap.segments.filter(s =>
+      s.category === ClapSegmentCategory.VIDEO &&
+      s.status === "completed" &&
+      s.startTimeInMs === 0 &&
+      s.endTimeInMs === currentClap.meta.durationInMs &&
+      s.assetUrl).at(0)
+
+    // inject the final mp4 video file into the .clap
+    if (alreadyAnEmbeddedFinalVideo) {
+      console.log(`editing the clap to update the final video`)
+      alreadyAnEmbeddedFinalVideo.assetUrl = currentVideo
+    } else {
+      console.log(`editing the clap to add a new final video`)
+      currentClap.segments.push(newSegment({
+        category: ClapSegmentCategory.VIDEO,
+        status: "completed",
+        startTimeInMs: 0,
+        endTimeInMs: currentClap.meta.durationInMs,
+        assetUrl: currentVideo,
+        assetDurationInMs: currentClap.meta.durationInMs,
+        assetSourceType: getClapAssetSourceType(currentVideo),
+        outputGain: 1.0,
+      }))
+    }
     const currentClapBlob: Blob = await serializeClap(currentClap)
 
     // Create an object URL for the compressed clap blob
@@ -272,7 +306,10 @@ export const useStore = create<{
     URL.revokeObjectURL(objectUrl)
     document.body.removeChild(anchor)
   },
-  loadClap: async (blob: Blob, fileName: string = "untitled_story.clap"): Promise<ClapProject> => {
+  loadClap: async (blob: Blob, fileName: string = "untitled_story.clap"): Promise<{
+    clap: ClapProject
+    regenerateVideo: boolean
+  }> => {
     if (!blob) {
       throw new Error(`missing blob`)
     }
@@ -293,13 +330,24 @@ export const useStore = create<{
     currentClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
     currentClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
 
+    const embeddedFinalVideoAssetUrl = currentClap.segments.filter(s =>
+      s.category === ClapSegmentCategory.VIDEO &&
+      s.status === "completed" &&
+      s.startTimeInMs === 0 &&
+      s.endTimeInMs === currentClap.meta.durationInMs &&
+      s.assetUrl).map(s => s.assetUrl).at(0)
+
     set({
       currentClap,
       storyPrompt,
       orientation,
+      currentVideo: embeddedFinalVideoAssetUrl || get().currentVideo,
       currentVideoOrientation: orientation,
     })
 
-    return currentClap
+    return {
+      clap: currentClap,
+      regenerateVideo: !embeddedFinalVideoAssetUrl,
+    }
   },
 }))
