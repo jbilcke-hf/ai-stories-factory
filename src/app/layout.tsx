@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(
-        `h-full w-full overflow-none light`,
+        `h-full w-full overflow-none dark`,
         salsa.className
         )}>
         {children}

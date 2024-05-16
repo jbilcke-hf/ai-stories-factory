@@ -39,6 +39,7 @@ import { FileContent } from "use-file-picker/dist/interfaces"
 import { generateRandomStory } from "@/lib/utils/generateRandomStory"
 import { logImage } from "@/lib/utils/logImage"
 import { defaultPrompt } from "./config"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function Main() {
   const [storyPromptDraft, setStoryPromptDraft] = useLocalStorage<string>(
@@ -584,532 +585,558 @@ export function Main() {
   }, [queryStringPrompt, queryStringAutorun, queryStringOrientation])
 
   return (
-    <div className={cn(
-      `fixed`,
-      // `bg-zinc-800`,
-      // old style, more "amber"
-      // `bg-gradient-to-br from-amber-600 to-yellow-500`, 
+    <TooltipProvider>
+      <div className={cn(
+        `fixed`,
+        // `bg-zinc-800`,
+        // old style, more "amber"
+        // `bg-gradient-to-br from-amber-600 to-yellow-500`, 
 
-      // nice style!
-      // `bg-gradient-to-br from-amber-700 to-yellow-300`, 
+        // nice style!
+        // `bg-gradient-to-br from-amber-700 to-yellow-300`, 
 
-      // warm orange, a bit flash but not bad, not bad at all
-      // `bg-gradient-to-br from-orange-700 to-yellow-400`, 
-   
-      // nice "AiTube" vibe
-      // `bg-gradient-to-br from-red-700 to-yellow-400`, 
-   
-      // pretty cool lime!
-      `bg-gradient-to-br from-lime-700 to-yellow-400`, 
+        // warm orange, a bit flash but not bad, not bad at all
+        // `bg-gradient-to-br from-orange-700 to-yellow-400`, 
+    
+        // nice "AiTube" vibe
+        // `bg-gradient-to-br from-red-700 to-yellow-400`, 
+    
+        // pretty cool lime!
+        `bg-gradient-to-br from-lime-700 to-yellow-400`, 
 
-      // new style, pretty "fresh" - maybe too bright? 
-      // use a dark logo for this one
-      // `bg-gradient-to-br from-yellow-200 to-yellow-500`, 
-      
-      // too pastel
-      // `bg-gradient-to-br from-yellow-200 to-red-300`, 
-      
-      // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
-      `w-screen h-full overflow-y-scroll md:overflow-hidden`,
-    )}
-    style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}>
-      <div className="flex flex-col w-screen h-screen">
-        <div className="
-        flex flex-col md:flex-row w-full
-        items-center md:justify-center
-        flex-1
-        "
+        // new style, pretty "fresh" - maybe too bright? 
+        // use a dark logo for this one
+        // `bg-gradient-to-br from-yellow-200 to-yellow-500`, 
+        
+        // too pastel
+        // `bg-gradient-to-br from-yellow-200 to-red-300`, 
+        
+        // `bg-gradient-to-br from-sky-400 to-sky-300/30`, 
+        `w-screen h-full overflow-y-scroll md:overflow-hidden`,
+      )}
+
+        // this version is a bit too aggressive on mobile
+        // style={{ boxShadow: "inset 0 0px 250px 0 rgb(0 0 0 / 60%)" }}
+
+        style={{ boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 50%)" }}
         >
-          <div className={cn(
-            `flex flex-col md:h-full md:items-center md:justify-center`,
-            `w-full md:w-1/2`,
-            `transition-all duration-200 ease-in-out`,
-            `ml-0`,
-            `pt-4 sm:pt-0`,
-          )}>
-            <Card className={cn(
-             //  `shadow-2xl z-30 rounded-3xl`,
-             `shadow-none`,
-             `w-full md:ml-[12%] md:w-[95%]`,
+        <div className="flex flex-col w-screen h-screen">
+          <div className="
+          flex flex-col md:flex-row w-full
+          items-center md:justify-center
+          flex-1
+          "
+          >
+            <div className={cn(
+              `flex flex-col md:h-full md:items-center md:justify-center`,
+              `w-full md:w-1/2`,
               `transition-all duration-200 ease-in-out`,
-              `bg-transparent dark:bg-transparent`,
-             // `backdrop-blur-2xl dark:backdrop-blur-2xl`,
-              // `bg-amber-500 dark:bg-amber-500`,
-                   
-              `border-transparent`,
-              // `bg-stone-50/90 dark:bg-stone-50/90`,
-              // `border-yellow-100 dark:border-yellow-100`,
-              // `bg-yellow-500 dark:bg-yellow-500`,
-              // `border-yellow-400 dark:border-yellow-400`,
-
+              `ml-0`,
+              `pt-4 sm:pt-0`,
             )}>
-              <CardHeader>
-                <div className="flex flex-col justify-start">
-                  <div className="
-                    flex flex-row
-                    items-center justify-center
-                    transition-all duration-200 ease-in-out
-                    px-3
-                    
-                    rounded-full">
-                    <div
-                    className="
-                      flex
-                      transition-all duration-200 ease-in-out
-                      items-center justify-center text-center
-                      w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16
-                      text-3xl md:text-4xl lg:text-5xl
-                      rounded-lg
-                      mr-2
-                      font-sans
-                      bg-amber-400 dark:bg-amber-400
-                     
-                      text-stone-950/80 dark:text-stone-950/80 font-bold
-                      "
-                      >AI</div>
-                      <div
-                        className="
-                        transition-all duration-200 ease-in-out
-                        text-amber-400 dark:text-amber-400
-                        text-3xl md:text-4xl lg:text-5xl
-                        "
+              <Card className={cn(
+              //  `shadow-2xl z-30 rounded-3xl`,
+              `shadow-none`,
+              `w-full md:ml-[12%] md:w-[95%]`,
+                `transition-all duration-200 ease-in-out`,
+                `bg-transparent dark:bg-transparent`,
+              // `backdrop-blur-2xl dark:backdrop-blur-2xl`,
+                // `bg-amber-500 dark:bg-amber-500`,
 
-                        style={{ textShadow: "#00000035 0px 0px 2px" }}
-                    
-                        /*
-                        className="
-                        text-5xl
-                        bg-gradient-to-br from-yellow-300 to-yellow-500
-                        inline-block text-transparent bg-clip-text
-                        py-6
-                        "
-                        */
-                      >Stories Factory</div>
-                    </div>
 
-                    <p
-                      className="
-                      transition-all duration-200 ease-in-out
-                      text-stone-900/90 dark:text-stone-100/90
-                      text-lg md:text-xl lg:text-2xl
-                      text-center 
-                      pt-2 md:pt-4
-                      "
-                      style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
-                    >Make video stories using AI ✨</p>
-                  </div>
-                </CardHeader>
-                <CardContent
-                  className="flex flex-col space-y-3"
-                  >
-                  
-                  {/* LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
-                  <div className="flex flex-row space-x-3 w-full">
-                  
-                 
-                    {/*
+                `border-transparent dark:border-transparent`,
+                // `bg-stone-50/90 dark:bg-stone-50/90`,
+                // `border-yellow-100 dark:border-yellow-100`,
+                // `bg-yellow-500 dark:bg-yellow-500`,
+                // `border-yellow-400 dark:border-yellow-400`,
 
-                    TODO: To finish by Julian a bit later
-
+              )}>
+                <CardHeader>
+                  <div className="flex flex-col justify-start">
                     <div className="
-                      flex flex-col
+                      flex flex-row
+                      items-center justify-center
+                      transition-all duration-200 ease-in-out
+                      px-3
                       
-                      w-32 bg-yellow-600
-                      transition-all duration-200 ease-in-out
-                      space-y-2 md:space-y-4
-                    ">
-                       <Input
-                          type="file"
-                          className=""
-                          onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                              const file = e.target.files[0];
-                              const newImageBase64 = await fileToBase64(file)
-                              setMainCharacterImage(newImageBase64)
-                            }
-                          }}
-                          accept="image/*"
-                        />
-                    </div>
-                    */}
-
-                    {/* MAIN PROMPT INPUT */}
-                    <div className="
-                      flex flex-col
-                      flex-1
-                      transition-all duration-200 ease-in-out
-                      space-y-2 md:space-y-4
-                    ">
-                      <TextareaField
-                        id="story-prompt-draft"
-                        // label="My story:"
-                        // disabled={modelState != 'ready'}
-                        onChange={(e) => {
-                          setStoryPromptDraft(e.target.value)
-                          promptDraftRef.current = e.target.value
-                        }}
-                        placeholder={defaultPrompt}
-                        inputClassName="
+                      rounded-full">
+                      <div
+                      className="
+                        flex
                         transition-all duration-200 ease-in-out
-                        h-32 md:h-56 lg:h-64
-                     
+                        items-center justify-center text-center
+                        w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16
+                        text-3xl md:text-4xl lg:text-5xl
+                        rounded-lg
+                        mr-2
+                        font-sans
+                        bg-amber-400 dark:bg-amber-400
+                      
+                        text-stone-950/80 dark:text-stone-950/80 font-bold
                         "
-                        disabled={isBusy}
-                        value={storyPromptDraft}
-                      />
-     
+                        >AI</div>
+                        <div
+                          className="
+                          transition-all duration-200 ease-in-out
+                          text-amber-400 dark:text-amber-400
+                          text-3xl md:text-4xl lg:text-5xl
+                          "
+
+                          style={{ textShadow: "#00000035 0px 0px 2px" }}
+                      
+                          /*
+                          className="
+                          text-5xl
+                          bg-gradient-to-br from-yellow-300 to-yellow-500
+                          inline-block text-transparent bg-clip-text
+                          py-6
+                          "
+                          */
+                        >Stories Factory</div>
+                      </div>
+
+                      <p
+                        className="
+                        transition-all duration-200 ease-in-out
+                        text-stone-900/90 dark:text-stone-900/90
+                        text-lg md:text-xl lg:text-2xl
+                        text-center 
+                        pt-2 md:pt-4
+                        "
+                        style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
+                      >Make video stories using AI ✨</p>
+                    </div>
+                  </CardHeader>
+                  <CardContent
+                    className="flex flex-col space-y-3"
+                    >
                     
-                    {/* END OF MAIN PROMPT INPUT */}
+                    {/* LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
+                    <div className="flex flex-row space-x-3 w-full">
+                    
+                  
+                      {/*
+
+                      TODO: To finish by Julian a bit later
+
+                      <div className="
+                        flex flex-col
+                        
+                        w-32 bg-yellow-600
+                        transition-all duration-200 ease-in-out
+                        space-y-2 md:space-y-4
+                      ">
+                        <Input
+                            type="file"
+                            className=""
+                            onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                const file = e.target.files[0];
+                                const newImageBase64 = await fileToBase64(file)
+                                setMainCharacterImage(newImageBase64)
+                              }
+                            }}
+                            accept="image/*"
+                          />
+                      </div>
+                      */}
+
+                      {/* MAIN PROMPT INPUT */}
+                      <div className="
+                        flex flex-col
+                        flex-1
+                        transition-all duration-200 ease-in-out
+                        space-y-2 md:space-y-4
+                      ">
+                        <TextareaField
+                          id="story-prompt-draft"
+                          // label="My story:"
+                          // disabled={modelState != 'ready'}
+                          onChange={(e) => {
+                            setStoryPromptDraft(e.target.value)
+                            promptDraftRef.current = e.target.value
+                          }}
+                          placeholder={defaultPrompt}
+                          inputClassName="
+                          transition-all duration-200 ease-in-out
+                          h-32 md:h-56 lg:h-64
+                      
+                          "
+                          disabled={isBusy}
+                          value={storyPromptDraft}
+                        />
+      
+                      
+                      {/* END OF MAIN PROMPT INPUT */}
+                      </div>
+
+                      {/* END OF LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
                     </div>
 
-                    {/* END OF LEFT MENU BUTTONS + MAIN PROMPT INPUT */}
-                  </div>
+                    {/* ACTION BAR */}
 
-                  {/* ACTION BAR */}
+                    <div className="
+                      w-full
+                      flex flex-col lg:flex-row
+                      justify-between items-center
+                      space-y-3 lg:space-x-3 lg:space-y-0">
+                
+                      {/*
+                        <Button
+                          onClick={() => load()}
+                          disabled={isBusy}
+                          // variant="ghost"
+                          className={cn(
+                            `text-sm md:text-base lg:text-lg`,
+                            `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                            `font-bold`,
+                            `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                            storyPromptDraft ? "opacity-100" : "opacity-80"
+                          )}
+                        >
+                        <span className="mr-1">Load project</span>
+                        </Button>
+                      */}
 
-                  <div className="
-                    w-full
-                    flex flex-row
-                    justify-between items-center
-                    space-x-3">
-              
-                    {/*
-                      <Button
-                        onClick={() => load()}
-                        disabled={isBusy}
+                      <div className="
+                
+                      flex flex-row
+                      justify-between items-center
+                      space-x-3">
+                        
+                
+                      {canSeeBetaFeatures && 
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                            onClick={openFilePicker}
+                            disabled={isBusy}
+                            // variant="ghost"
+                            className={cn(
+                              `text-xs md:text-sm lg:text-base`,
+                              `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                              `font-bold`,
+                              `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                              storyPromptDraft ? "opacity-100" : "opacity-80"
+                            )}
+                          >
+                            <span className="hidden xl:inline mr-1">Load .clap</span>
+                            <span className="inline xl:hidden mr-1">Load .clap</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-xs font-normal text-stone-100/90 text-center">
+                            Clap is a new AI format,<br/>check out the academy<br/>to learn more about it.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>}
+                
+    
+    
+                      {canSeeBetaFeatures &&
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                        onClick={() => saveClap()}
+                        disabled={!currentClap || isBusy}
                         // variant="ghost"
                         className={cn(
-                          `text-sm md:text-base lg:text-lg`,
+                          `text-xs md:text-sm lg:text-base`,
                           `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
                           `font-bold`,
                           `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
                           storyPromptDraft ? "opacity-100" : "opacity-80"
                         )}
                       >
-                       <span className="mr-1">Load project</span>
-                      </Button>
-                    */}
-
-                    <div className="
-               
-                    flex flex-row
-                    justify-between items-center
-                    space-x-3">
-                      
-               
-                    {canSeeBetaFeatures && <Button
-                      onClick={openFilePicker}
-                      disabled={isBusy}
-                      // variant="ghost"
-                      className={cn(
-                        `text-sm md:text-base lg:text-lg`,
-                        `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
-                        `font-bold`,
-                        `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
-                        storyPromptDraft ? "opacity-100" : "opacity-80"
-                      )}
-                    >
-                      <span className="hidden xl:inline mr-1">Load</span>
-                      <span className="inline xl:hidden mr-1">Load</span>
-                    </Button>}
-              
-   
-  
-                    {canSeeBetaFeatures ?
-                    <Button
-                      onClick={() => saveClap()}
-                      disabled={!currentClap || isBusy}
-                      // variant="ghost"
-                      className={cn(
-                        `text-sm md:text-base lg:text-lg`,
-                        `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
-                        `font-bold`,
-                        `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
-                        storyPromptDraft ? "opacity-100" : "opacity-80"
-                      )}
-                    >
-                      <span className="hidden xl:inline mr-1">Save</span>
-                      <span className="inline xl:hidden mr-1">Save</span>
-                    </Button> : <div></div>
-                    }
-                    </div>
-  
-                    <div className=" 
-                    flex flex-row
-                    justify-between items-center
-                    space-x-3
-                    select-none
-                    ">
-
- 
-                      {/* RANDOMNESS SWITCH */}
-                      <div className=" 
-                      flex flex-row
-                      justify-between items-center
-                      cursor-pointer
-                      transition-all duration-150 ease-in-out
-                      hover:scale-110 active:scale-150
-                     text-stone-800
-                      hover:text-stone-950
-                      active:text-black
-                      group
-                      "
-                      onClick={() => {
-                        const randomStory = generateRandomStory()
-                        setStoryPromptDraft(randomStory)
-                        promptDraftRef.current = randomStory
-                      }}>
-                        <div>
-                        </div>
-                        <div className="
-                        w-6 h-8
-                        flex flex-row items-center justify-center
-                        transition-all duration-150 ease-out
-                        group-hover:animate-swing
-                        "
-                        >
-                          <GiRollingDices size={24} />
-                        </div>
+                        <span className="hidden xl:inline mr-1">Save .clap</span>
+                        <span className="inline xl:hidden mr-1">Save .clap</span>
+                      </Button> </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-xs font-normal text-stone-100/90 text-center">
+                          Clap is a new AI format,<br/>check out the academy<br/>to learn more about it.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip> 
+                      }
                       </div>
-                      {/* END OF RANDOMNESS SWITCH */}
-
-
-                      {/* ORIENTATION SWITCH */}
+    
                       <div className=" 
                       flex flex-row
                       justify-between items-center
-                      cursor-pointer
-                      transition-all duration-150 ease-out
-                      hover:scale-110 active:scale-150
-                      text-stone-800
-                      hover:text-stone-950
-                      active:text-black
-                      group
-                      "
-                      onClick={() => toggleOrientation()}>
-                        <div>
-                        </div>
-                        <div className="
-                        w-8 h-8
-                        flex flex-row items-center justify-center
+                      space-x-3
+                      select-none
+                      ">
+
+  
+                        {/* RANDOMNESS SWITCH */}
+                        <div className=" 
+                        flex flex-row
+                        justify-between items-center
+                        cursor-pointer
                         transition-all duration-150 ease-in-out
-                        group-hover:animate-swing
+                        hover:scale-110 active:scale-150
+                      text-stone-800
+                        hover:text-stone-950
+                        active:text-black
+                        group
                         "
-                        >
-                          <div className={cn(
-                            `transition-all duration-200 ease-in-out`,
-                            orientation === ClapMediaOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
-                          )}>
-                            <IoMdPhonePortrait size={24} />
+                        onClick={() => {
+                          const randomStory = generateRandomStory()
+                          setStoryPromptDraft(randomStory)
+                          promptDraftRef.current = randomStory
+                        }}>
+                          <div>
+                          </div>
+                          <div className="
+                          w-6 h-8
+                          flex flex-row items-center justify-center
+                          transition-all duration-150 ease-out
+                          group-hover:animate-swing
+                          "
+                          >
+                            <GiRollingDices size={24} />
                           </div>
                         </div>
+                        {/* END OF RANDOMNESS SWITCH */}
+
+
+                        {/* ORIENTATION SWITCH */}
+                        <div className=" 
+                        flex flex-row
+                        justify-between items-center
+                        cursor-pointer
+                        transition-all duration-150 ease-out
+                        hover:scale-110 active:scale-150
+                        text-stone-800
+                        hover:text-stone-950
+                        active:text-black
+                        group
+                        "
+                        onClick={() => toggleOrientation()}>
+                          <div>
+                          </div>
+                          <div className="
+                          w-8 h-8
+                          flex flex-row items-center justify-center
+                          transition-all duration-150 ease-in-out
+                          group-hover:animate-swing
+                          "
+                          >
+                            <div className={cn(
+                              `transition-all duration-200 ease-in-out`,
+                              orientation === ClapMediaOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
+                            )}>
+                              <IoMdPhonePortrait size={24} />
+                            </div>
+                          </div>
+                        </div>
+                        {/* END OF ORIENTATION SWITCH */}
+                        <Button
+                          onClick={handleSubmit}
+                          disabled={!storyPromptDraft || isBusy}
+                          // variant="ghost"
+                          className={cn(
+                            `text-base md:text-lg lg:text-xl xl:text-2xl`,
+                            `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
+                            `font-bold`,
+                            `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
+                            storyPromptDraft ? "opacity-100" : "opacity-80"
+                          )}
+                        >
+                        <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
+                        </Button>
                       </div>
-                      {/* END OF ORIENTATION SWITCH */}
-                      <Button
-                        onClick={handleSubmit}
-                        disabled={!storyPromptDraft || isBusy}
-                        // variant="ghost"
-                        className={cn(
-                          `text-base md:text-lg lg:text-xl xl:text-2xl`,
-                          `bg-stone-800/90 text-amber-400/100 dark:bg-stone-800/90 dark:text-amber-400/100`,
-                          `font-bold`,
-                          `hover:bg-stone-800/100 hover:text-amber-300/100 dark:hover:bg-stone-800/100 dark:hover:text-amber-300/100`,
-                          storyPromptDraft ? "opacity-100" : "opacity-80"
-                        )}
-                      >
-                      <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
-                      </Button>
+
+                    {/* END OF ACTION BAR */}
                     </div>
 
-                  {/* END OF ACTION BAR */}
+                </CardContent>
+              </Card>
+            </div>
+            <div className={cn(
+              `flex flex-col items-center justify-center`,
+              `flex-1 h-full`,
+              // `transition-all duration-200 ease-in-out`
+
+              `-mt-[20px] -mb-[90px] md:-mt-0 md:-mb-0`,
+            )}>
+              
+              <div className={cn(`
+                -mt-8 md:mt-0
+                transition-all duration-200 ease-in-out
+              `,
+              isLandscape
+                ? `scale-[0.9] md:scale-[0.75] lg:scale-[0.9] xl:scale-[1.0] 2xl:scale-[1.1]`
+                : `scale-[0.8] md:scale-[0.9] lg:scale-[1.1]`
+                )}>
+                <DeviceFrameset
+                  device="Nexus 5"
+                  // color="black"
+
+                  landscape={isLandscape}
+
+                  // note 1: videos are generated in 1024x576 or 576x1024
+                  // so we need to keep the same ratio here
+
+                  // note 2: width and height are fixed, if width always stays 512
+                  // that's because the landscape={} parameter will do the switch for us
+
+                  width={288}
+                  height={512}
+                >
+                  <div className="
+                  flex flex-col items-center justify-center
+                  w-full h-full
+                  bg-black text-white
+                  ">
+                    {isBusy ? <div className="
+                    flex flex-col 
+                    items-center justify-center
+                    text-center space-y-1.5">
+                      <p className="text-2xl font-bold">{progress}%</p> 
+                      <p className="text-base text-white/70">{isBusy
+                        ? (
+                          // note: some of those tasks are running in parallel,
+                          // and some are super-slow (like music or video)
+                          // by carefully selecting in which order we set the ternaries,
+                          // we can create the illusion that we just have a succession of reasonably-sized tasks
+                          storyGenerationStatus === "generating" ? "Writing story.."
+                          : parseGenerationStatus === "generating" ? "Loading the project.."
+                          : assetGenerationStatus === "generating" ? "Casting characters.."
+                          : imageGenerationStatus === "generating" ? "Creating storyboards.."
+                          : soundGenerationStatus === "generating" ? "Recording sounds.."
+                          : videoGenerationStatus === "generating" ? "Filming shots.."
+                          : musicGenerationStatus === "generating" ? "Producing music.."
+                          : voiceGenerationStatus === "generating" ? "Recording dialogues.."
+                          : finalGenerationStatus === "generating" ? "Editing final cut.."
+                          : "Please wait.."
+                        )
+                        : status === "error"
+                        ? <span>{error || ""}</span>
+                        : <span>{error ? error : <span>&nbsp;</span>}</span> // to prevent layout changes
+                      }</p>
+                      </div>
+                    : (currentVideo && currentVideo?.length > 128) ? <video
+                      src={currentVideo}
+                      controls
+                      playsInline
+                      // I think we can't autoplay with sound,
+                      // so let's disable auto-play
+                      // autoPlay
+                      // muted
+                      loop
+                      className="object-cover"
+                      style={{
+                      }}
+                    /> : <div  className="
+                    flex flex-col 
+                    items-center justify-center
+                    text-lg text-center"></div>}
                   </div>
 
-              </CardContent>
-            </Card>
-          </div>
-          <div className={cn(
-            `flex flex-col items-center justify-center`,
-            `flex-1 h-full`,
-            // `transition-all duration-200 ease-in-out`
-
-            `-mt-[20px] -mb-[90px] md:-mt-0 md:-mb-0`,
-          )}>
-            
-            <div className={cn(`
-              -mt-8 md:mt-0
-              transition-all duration-200 ease-in-out
-            `,
-             isLandscape
-              ? `scale-[0.9] md:scale-[0.75] lg:scale-[0.9] xl:scale-[1.0] 2xl:scale-[1.1]`
-              : `scale-[0.8] md:scale-[0.9] lg:scale-[1.1]`
-              )}>
-              <DeviceFrameset
-                device="Nexus 5"
-                // color="black"
-
-                landscape={isLandscape}
-
-                // note 1: videos are generated in 1024x576 or 576x1024
-                // so we need to keep the same ratio here
-
-                // note 2: width and height are fixed, if width always stays 512
-                // that's because the landscape={} parameter will do the switch for us
-
-                width={288}
-                height={512}
-              >
-                <div className="
-                flex flex-col items-center justify-center
-                w-full h-full
-                bg-black text-white
-                ">
-                  {isBusy ? <div className="
-                  flex flex-col 
-                  items-center justify-center
-                  text-center space-y-1.5">
-                    <p className="text-2xl font-bold">{progress}%</p> 
-                    <p className="text-base text-white/70">{isBusy
-                      ? (
-                        // note: some of those tasks are running in parallel,
-                        // and some are super-slow (like music or video)
-                        // by carefully selecting in which order we set the ternaries,
-                        // we can create the illusion that we just have a succession of reasonably-sized tasks
-                        storyGenerationStatus === "generating" ? "Writing story.."
-                        : parseGenerationStatus === "generating" ? "Loading the project.."
-                        : assetGenerationStatus === "generating" ? "Casting characters.."
-                        : imageGenerationStatus === "generating" ? "Creating storyboards.."
-                        : soundGenerationStatus === "generating" ? "Recording sounds.."
-                        : videoGenerationStatus === "generating" ? "Filming shots.."
-                        : musicGenerationStatus === "generating" ? "Producing music.."
-                        : voiceGenerationStatus === "generating" ? "Recording dialogues.."
-                        : finalGenerationStatus === "generating" ? "Editing final cut.."
-                        : "Please wait.."
-                      )
-                      : status === "error"
-                      ? <span>{error || ""}</span>
-                      : <span>{error ? error : <span>&nbsp;</span>}</span> // to prevent layout changes
-                     }</p>
-                    </div>
-                  : (currentVideo && currentVideo?.length > 128) ? <video
-                    src={currentVideo}
-                    controls
-                    playsInline
-                    // I think we can't autoplay with sound,
-                    // so let's disable auto-play
-                    // autoPlay
-                    // muted
-                    loop
-                    className="object-cover"
-                    style={{
-                    }}
-                  /> : <div  className="
-                  flex flex-col 
-                  items-center justify-center
-                  text-lg text-center"></div>}
-                </div>
-
-                <div className={cn(`
-                  fixed
-                  flex flex-row items-center justify-center
-                  bg-transparent
-                  font-sans
-                  -mb-0
-                  `,
-                  isLandscape ? 'h-4' : 'h-14'
-                 )}
-                  style={{ width: isPortrait ? 288 : 512 }}>
-                  <span className="text-stone-100/50 text-4xs"
-                    style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>
-                    Powered by
-                  </span>
-                  <span className="ml-1 mr-0.5">
-                    <Image src={HFLogo} alt="Hugging Face" width={14} height={13} />
-                  </span>
-                  <span className="text-stone-100/80 text-3xs font-semibold"
-                    style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>Hugging Face</span>
-            
-                </div>
-              </DeviceFrameset>
+                  <div className={cn(`
+                    fixed
+                    flex flex-row items-center justify-center
+                    bg-transparent
+                    font-sans
+                    -mb-0
+                    `,
+                    isLandscape ? 'h-4' : 'h-14'
+                  )}
+                    style={{ width: isPortrait ? 288 : 512 }}>
+                    <span className="text-stone-100/50 text-4xs"
+                      style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>
+                      Powered by
+                    </span>
+                    <span className="ml-1 mr-0.5">
+                      <Image src={HFLogo} alt="Hugging Face" width={14} height={13} />
+                    </span>
+                    <span className="text-stone-100/80 text-3xs font-semibold"
+                      style={{ textShadow: "rgb(0 0 0 / 80%) 0px 0px 2px" }}>Hugging Face</span>
               
-              {(currentVideo && currentVideo.length > 128) ? <div
-                className={cn(`
-                w-full
-                flex flex-row
-                items-center justify-center
-                transition-all duration-150 ease-in-out
- 
-               text-stone-800
-          
-                group
-                pt-2 md:pt-4
-                `, 
-                  isBusy ? 'opacity-50' : 'cursor-pointer opacity-100 hover:scale-110 active:scale-150 hover:text-stone-950 active:text-black'
-                )}
-                style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
-                onClick={isBusy ? undefined : saveVideo}
-              >
-                <div className="
+                  </div>
+                </DeviceFrameset>
+                
+                {(currentVideo && currentVideo.length > 128) ? <div
+                  className={cn(`
+                  w-full
+                  flex flex-row
+                  items-center justify-center
+                  transition-all duration-150 ease-in-out
+  
+                text-stone-800
+            
+                  group
+                  pt-2 md:pt-4
+                  `, 
+                    isBusy ? 'opacity-50' : 'cursor-pointer opacity-100 hover:scale-110 active:scale-150 hover:text-stone-950 active:text-black'
+                  )}
+                  style={{ textShadow: "rgb(255 255 255 / 19%) 0px 0px 2px" }}
+                  onClick={isBusy ? undefined : saveVideo}
+                >
+                  <div className="
+                  text-base md:text-lg lg:text-xl
+                  transition-all duration-150 ease-out
+                  group-hover:animate-swing
+                  "><FaCloudDownloadAlt /></div>
+                  <div className="text-xs md:text-sm lg:text-base">&nbsp;Download</div>
+                </div> : null}
+              </div>
+            </div>
+          </div>
+          <div
+            className="
+              fixed
+            
+              left-4 md:left-8
+              bottom-4
+              flex flex-col md:flex-row
+              md:items-center justify-center
+              space-y-4 md:space-x-4 md:space-y-0
+      
+            ">
+            <a
+              className="
+              flex
+              no-underline
+              animation-all duration-150 ease-in-out
+              group
+              text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
+              href="https://discord.gg/AEruz9B92B"
+              target="_blank">
+              <div className="
                 text-base md:text-lg lg:text-xl
                 transition-all duration-150 ease-out
                 group-hover:animate-swing
-                "><FaCloudDownloadAlt /></div>
-                <div className="text-xs md:text-sm lg:text-base">&nbsp;Download</div>
-              </div> : null}
-            </div>
+              "><FaDiscord /></div>
+              <div className="text-xs md:text-sm lg:text-base ml-1.5">
+                <span className="hidden md:block">Chat on Discord</span>
+                <span className="block md:hidden">Discord</span>
+              </div>
+            </a>
+            <a
+              className="
+              flex
+              no-underline
+              animation-all duration-150 ease-in-out
+              group
+              text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
+              href="https://latent-store.notion.site/AI-Stories-Academy-8e3ce6ff2d5946ffadc94193619dd5cd"
+              target="_blank">
+              <div className="
+                text-base md:text-lg lg:text-xl
+                transition-all duration-150 ease-out
+                group-hover:animate-swing
+              "><GiSpellBook /></div>
+              <div className="text-xs md:text-sm lg:text-base ml-1.5">
+                <span className="hidden md:block">Prompt academy</span>
+                <span className="block md:hidden">Academy</span>
+              </div>
+            </a>
           </div>
         </div>
-        <div
-          className="
-            fixed
-          
-            left-8
-            bottom-4
-            flex flex-col md:flex-row
-            items-center justify-center
-            space-y-4 md:space-x-4 md:space-y-0
-    
-           ">
-          <a
-            className="
-            flex
-            no-underline
-            animation-all duration-150 ease-in-out
-            group
-            text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
-            href="https://discord.gg/AEruz9B92B"
-            target="_blank">
-            <div className="
-              text-base md:text-lg lg:text-xl
-              transition-all duration-150 ease-out
-              group-hover:animate-swing
-            "><FaDiscord /></div>
-            <div className="text-xs md:text-sm lg:text-base ml-1.5">
-              <span className="hidden md:block">Chat on Discord</span>
-              <span className="block md:hidden">Discord</span>
-            </div>
-          </a>
-          <a
-            className="
-            flex
-            no-underline
-            animation-all duration-150 ease-in-out
-            group
-            text-stone-950/60 hover:text-stone-950/80 scale-95 hover:scale-100"
-            href="https://latent-store.notion.site/AI-Stories-Academy-8e3ce6ff2d5946ffadc94193619dd5cd"
-            target="_blank">
-            <div className="
-              text-base md:text-lg lg:text-xl
-              transition-all duration-150 ease-out
-              group-hover:animate-swing
-            "><GiSpellBook /></div>
-            <div className="text-xs md:text-sm lg:text-base ml-1.5">
-              <span className="hidden md:block">Prompt spells</span>
-              <span className="block md:hidden">Prompt spells</span>
-            </div>
-          </a>
-        </div>
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
+    </TooltipProvider>
   );
 }
