@@ -11,7 +11,9 @@ export function useProgressTimer() {
   const { isBusy, busyRef } = useIsBusy()
 
   const timerFn = async () => {
-    const { isBusy, progress, stage } = useStore.getState()
+    const { progress, stage } = useStore.getState()
+
+    let isBusy = busyRef.current
 
     clearTimeout(timerRef.current)
     if (!isBusy || stage === "idle") {
@@ -34,10 +36,19 @@ export function useProgressTimer() {
     timerRef.current = setTimeout(timerFn, 1600)
   }
 
+  // const running = useRef(false)
+
   useEffect(() => {
     timerFn()
     clearTimeout(timerRef.current)
-    if (!isBusy) { return }
+    let isBusy = busyRef.current
+    if (!isBusy) {
+      return
+    }/* else if (running.current) {
+      return
+    }
+    */
+    // running.current = true
     timerRef.current = setTimeout(timerFn, 0)
   }, [isBusy])
 

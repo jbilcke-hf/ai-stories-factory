@@ -13,7 +13,7 @@ import { TextareaField } from "@/components/form/textarea-field"
 import { cn, generateRandomStory } from "@/lib/utils"
 import { defaultPrompt } from "./config"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useOrientation, useProgressTimer, useQueryStringParams, useStoryPromptDraft } from "@/lib/hooks"
+import { useIsBusy, useOrientation, useProgressTimer, useQueryStringParams, useStoryPromptDraft } from "@/lib/hooks"
 import { BottomBar, VideoPreview } from "@/components/interface"
 import { MainTitle } from "@/components/interface/main-title"
 import { LoadClapButton } from "@/components/interface/load-clap-button"
@@ -23,7 +23,7 @@ import { Characters } from "@/components/interface/characters"
 
 export function Main() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
-  const  { isBusy } = useProgressTimer()
+  const  { isBusy } = useIsBusy()
   const { orientation, toggleOrientation } = useOrientation()
   const { handleSubmit } = useProcessors()
   useQueryStringParams()
