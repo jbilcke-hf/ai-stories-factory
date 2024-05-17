@@ -31,7 +31,7 @@ export function useProgressTimer() {
     })
 
     // timerRef.current = setTimeout(timerFn, progressDelayInMsPerStage[stage])
-    timerRef.current = setTimeout(timerFn, 1200)
+    timerRef.current = setTimeout(timerFn, 1600)
   }
 
   useEffect(() => {
