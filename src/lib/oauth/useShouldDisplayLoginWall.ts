@@ -1,16 +1,21 @@
+import { useDynamicConfig } from "../config/useDynamicConfig"
 
-// we don't want to display the login wall to people forking the project,
-
-import { enableHuggingFaceOAuth, enableHuggingFaceOAuthWall, oauthClientId } from "@/app/config"
-
-// or to people who selected no hugging face server at all
 export function useShouldDisplayLoginWall() {
+  const { config, isConfigReady } = useDynamicConfig()
 
-  const shouldDisplayLoginWall = Boolean(
-    oauthClientId &&
-    enableHuggingFaceOAuth &&
-    enableHuggingFaceOAuthWall
+  const clientId = config.oauthClientId
+  const enableOAuth = config.enableHuggingFaceOAuth
+  const enableOAuthWall = config.enableHuggingFaceOAuthWall
+
+  const isConfigEnablingOAuthWall = Boolean(
+    clientId &&
+    enableOAuth &&
+    enableOAuthWall
   )
+
+  const shouldDisplayLoginWall =
+  isConfigReady &&
+  isConfigEnablingOAuthWall
 
   return shouldDisplayLoginWall
 }

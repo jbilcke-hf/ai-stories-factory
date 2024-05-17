@@ -4,12 +4,11 @@ import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { OAuthResult, oauthHandleRedirectIfPresent, oauthLoginUrl } from "@huggingface/hub"
 
-import { enableHuggingFaceOAuth, oauthClientId, oauthScopes } from "@/app/config"
-
 import { usePersistedOAuth } from "./usePersistedOAuth"
 import { getValidOAuth } from "./getValidOAuth"
 import { useShouldDisplayLoginWall } from "./useShouldDisplayLoginWall"
 import { getOAuthRedirectUrl } from "./getOAuthRedirectUrl"
+import { useDynamicConfig } from "../config/useDynamicConfig"
 
 export function useOAuth({
   debug = false
@@ -28,15 +27,17 @@ export function useOAuth({
   enableOAuthWall: boolean
   oauthResult?: OAuthResult
  } {
+  const { config, isConfigReady } = useDynamicConfig()
+
   const [oauthResult, setOAuthResult] = usePersistedOAuth()
 
-  const clientId = oauthClientId
+  const clientId = config.oauthClientId
 
   // const redirectUrl = config.oauthRedirectUrl
   const redirectUrl = getOAuthRedirectUrl()
 
-  const scopes = oauthScopes
-  const enableOAuth = enableHuggingFaceOAuth
+  const scopes = config.oauthScopes
+  const enableOAuth = config.enableHuggingFaceOAuth
 
   const searchParams = useSearchParams()
   const code = searchParams?.get("code") || ""
@@ -46,11 +47,12 @@ export function useOAuth({
 
   // note: being able to log into hugging face using the popup
   // is different from seeing the "login wall"
-  const canLogin: boolean = Boolean(oauthClientId && enableOAuth)
+  const canLogin: boolean = Boolean(isConfigReady && clientId && enableOAuth)
   const isLoggedIn = Boolean(oauthResult)
 
   const enableOAuthWall = useShouldDisplayLoginWall() 
 
+  /*
   if (debug) {
     console.log("useOAuth debug:", {
       oauthResult,
@@ -65,22 +67,8 @@ export function useOAuth({
       canLogin,
       isLoggedIn,
     })
-
-    /*
-    useOAuth debug: {
-      oauthResult: '',
-      clientId: '........',
-      redirectUrl: 'http://localhost:3000',
-      scopes: 'openid profile inference-api',
-      isOAuthEnabled: true,
-      code: '...........',
-      state: '{"nonce":".........","redirectUri":"http://localhost:3000"}',
-      hasReceivedFreshOAuth: true,
-      canLogin: false,
-      isLoggedIn: false
-    }
-    */
   }
+  */
 
   useEffect(() => {
     // no need to perfor the rest if the operation is there is nothing in the url
@@ -93,11 +81,11 @@ export function useOAuth({
 
         if (!newOAuth) {
           if (debug) {
-            console.log("useOAuth::useEffect 1: got something in the url but no valid oauth data to show.. something went terribly wrong")
+            // console.log("useOAuth::useEffect 1: got something in the url but no valid oauth data to show.. something went terribly wrong")
           }
         } else {
           if (debug) {
-            console.log("useOAuth::useEffect 1: correctly received the new oauth result, saving it to local storage:", newOAuth)
+            // console.log("useOAuth::useEffect 1: correctly received the new oauth result, saving it to local storage:", newOAuth)
           }
           setOAuthResult(newOAuth)
 
