@@ -6,7 +6,7 @@ import { create } from "zustand"
 import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
 import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
 
-import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/aitube/config"
+import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/config"
 import { putTextInTextAreaElement } from "@/lib/utils/putTextInTextAreaElement"
 import { defaultPrompt } from "./config"
 
@@ -41,6 +41,8 @@ export const useStore = create<{
   currentVideoOrientation: ClapMediaOrientation
   progress: number
   error: string
+  showAuthWall: boolean
+  setShowAuthWall: (showAuthWall: boolean) => void
   toggleOrientation: () => void
   setOrientation: (orientation: ClapMediaOrientation) => void
   setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => void
@@ -94,6 +96,8 @@ export const useStore = create<{
   currentVideoOrientation: ClapMediaOrientation.PORTRAIT,
   progress: 0,
   error: "",
+  showAuthWall: false,
+  setShowAuthWall: (showAuthWall: boolean) => { set({ showAuthWall }) },
   toggleOrientation: () => {
     const { orientation: previousOrientation, currentVideoOrientation, currentVideo } = get()
     const orientation =

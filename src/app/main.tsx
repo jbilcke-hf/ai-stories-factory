@@ -20,6 +20,9 @@ import { LoadClapButton } from "@/components/interface/load-clap-button"
 import { SaveClapButton } from "@/components/interface/save-clap-button"
 import { useProcessors } from "@/lib/hooks/useProcessors"
 import { Characters } from "@/components/interface/characters"
+import { useOAuth } from "@/lib/oauth/useOAuth"
+import { useStore } from "./store"
+import { AuthWall } from "@/components/interface/auth-wall"
 
 export function Main() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
@@ -27,6 +30,10 @@ export function Main() {
   const { orientation, toggleOrientation } = useOrientation()
   const { handleSubmit } = useProcessors()
   useQueryStringParams()
+    
+  const showAuthWall = useStore(s => s.showAuthWall)
+  const { isLoggedIn, enableOAuthWall } = useOAuth({ debug: true })
+
   return (
     <TooltipProvider>
       <div className={cn(
@@ -275,7 +282,7 @@ export function Main() {
                         {/* END OF ORIENTATION SWITCH */}
                         <Button
                           onClick={handleSubmit}
-                          disabled={!storyPromptDraft || isBusy}
+                          disabled={!storyPromptDraft || isBusy || !isLoggedIn}
                           // variant="ghost"
                           className={cn(
                             `text-base md:text-lg lg:text-xl xl:text-2xl`,
@@ -308,6 +315,7 @@ export function Main() {
           <BottomBar />
         </div>
         <Toaster />
+        <AuthWall show={showAuthWall} />
       </div>
     </TooltipProvider>
   );

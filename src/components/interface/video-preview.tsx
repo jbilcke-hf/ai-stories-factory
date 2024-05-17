@@ -12,8 +12,13 @@ import { cn } from "@/lib/utils/cn"
 
 import { useStore } from "../../app/store"
 import HFLogo from "../../app/hf-logo.svg"
+import { Login } from "./login"
+import { useOAuth } from "@/lib/oauth/useOAuth"
 
 export function VideoPreview() {
+
+  const { isLoggedIn, enableOAuthWall } = useOAuth()
+
   const status = useStore(s => s.status)
   const parseGenerationStatus = useStore(s => s.parseGenerationStatus)
   const storyGenerationStatus = useStore(s => s.storyGenerationStatus)
@@ -37,6 +42,17 @@ export function VideoPreview() {
     isLandscape,
     isPortrait,
   } = useOrientation()
+
+  const placeholder = <div
+  className="
+  text-base
+  text-center
+text-stone-50/90 dark:text-stone-50/90
+"
+>{
+  error ? <span>{error}</span> : 
+  <span>No video yet</span>
+}</div>
 
   return (
     <div className={cn(`
@@ -67,12 +83,25 @@ export function VideoPreview() {
         w-full h-full
         bg-black text-white
         ">
-          {isBusy ? <div className="
+          {
+            !isLoggedIn ? <div className="
+            flex flex-col items-center justify-center
+            space-y-2
+            ">
+              <div className="
+              text-base
+              text-center
+            text-stone-50/90 dark:text-stone-50/90
+            ">Please login to generate videos:</div>
+              <Login />
+              </div>
+            : isBusy ? <div className="
           flex flex-col 
           items-center justify-center
           text-center space-y-1.5">
             <p className="text-2xl font-bold">{progress}%</p> 
-            <p className="text-base text-white/70">{isBusy
+            <p className="text-base text-white/70">{
+            isBusy
               ? (
                 // note: some of those tasks are running in parallel,
                 // and some are super-slow (like music or video)
@@ -91,7 +120,7 @@ export function VideoPreview() {
               )
               : status === "error"
               ? <span>{error || ""}</span>
-              : <span>{error ? error : <span>&nbsp;</span>}</span> // to prevent layout changes
+              : placeholder // to prevent layout changes
             }</p>
             </div>
           : (currentVideo && currentVideo?.length > 128) ? <video
@@ -106,10 +135,7 @@ export function VideoPreview() {
             className="object-cover"
             style={{
             }}
-          /> : <div  className="
-          flex flex-col 
-          items-center justify-center
-          text-lg text-center"></div>}
+          /> : placeholder}
         </div>
 
         <div className={cn(`

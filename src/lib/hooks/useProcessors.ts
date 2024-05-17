@@ -1,10 +1,12 @@
 "use client"
 
-import React, { useTransition } from "react"
+import React, { useState, useTransition } from "react"
 import { ClapProject, ClapSegmentCategory, getClapAssetSourceType, newEntity, updateClap } from "@aitube/clap"
 
 import { logImage } from "@/lib/utils"
 import { useIsBusy, useStoryPromptDraft } from "@/lib/hooks"
+import { isRateLimitError } from "@/lib/utils/isRateLimitError"
+import { useToast } from "@/components/ui/use-toast"
 
 import { createClap } from "@/app/server/aitube/createClap"
 import { editClapEntities } from "@/app/server/aitube/editClapEntities"
@@ -16,8 +18,11 @@ import { editClapVideos } from "@/app/server/aitube/editClapVideos"
 import { exportClapToVideo } from "@/app/server/aitube/exportClapToVideo"
 
 import { useStore } from "../../app/store"
+import { useOAuth } from "../oauth/useOAuth"
 
 export function useProcessors() {
+  const [isLocked, setLocked] = useState(false)
+  
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
 
   const [_isPending, startTransition] = useTransition()
@@ -30,6 +35,7 @@ export function useProcessors() {
   const setMainCharacterImage = useStore(s => s.setMainCharacterImage)
   const setMainCharacterVoice = useStore(s => s.setMainCharacterVoice)
   const setStatus = useStore(s => s.setStatus)
+  const setShowAuthWall = useStore(s => s.setShowAuthWall)
 
   const error = useStore(s => s.error)
   const setError = useStore(s => s.setError)
@@ -46,7 +52,11 @@ export function useProcessors() {
   const setCurrentVideo = useStore(s => s.setCurrentVideo)
   const setProgress = useStore(s => s.setProgress)
 
+  const { isLoggedIn, enableOAuthWall } = useOAuth()
+
   const  { isBusy, busyRef } = useIsBusy()
+
+  const { toast } = useToast()
 
   const generateStory = async (): Promise<ClapProject> => {
 
@@ -69,11 +79,11 @@ export function useProcessors() {
 
       if (clap.segments.length <= 1) { throw new Error(`failed to generate more than one segments`) }
 
-      console.log(`handleSubmit(): received a clap = `, clap)
+      console.log(`generateStory(): received a clap = `, clap)
 
-      console.log(`handleSubmit():  copying over entities from the previous clap`)
+      console.log(`generateStory():  copying over entities from the previous clap`)
 
-      console.log(`handleSubmit(): later we can add button(s) to clear the project and/or the character(s)`)
+      console.log(`generateStory(): later we can add button(s) to clear the project and/or the character(s)`)
       const { currentClap } = useStore.getState()
 
       clap.entities = Array.isArray(currentClap?.entities) ? currentClap.entities : []
@@ -153,7 +163,7 @@ export function useProcessors() {
 
       if (!clap) { throw new Error(`failed to edit the sound`) }
 
-      console.log(`handleSubmit(): received a clap with sound = `, clap)
+      console.log(`generateSounds(): received a clap with sound = `, clap)
       setSoundGenerationStatus("finished")
       console.log("---------------- GENERATED SOUND ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.SOUND), [
@@ -180,7 +190,7 @@ export function useProcessors() {
 
       if (!clap) { throw new Error(`failed to edit the music`) }
 
-      console.log(`handleSubmit(): received a clap with music = `, clap)
+      console.log(`generateMusic(): received a clap with music = `, clap)
       setMusicGenerationStatus("finished")
       console.log("---------------- GENERATED MUSIC ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.MUSIC), [
@@ -210,7 +220,7 @@ export function useProcessors() {
       if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
       // const fusion = 
-      console.log(`handleSubmit(): received storyboards = `, clap)
+      console.log(`generateStoryboards(): received storyboards = `, clap)
 
       setImageGenerationStatus("finished")
       console.log("---------------- GENERATED STORYBOARDS ----------------")
@@ -282,7 +292,7 @@ export function useProcessors() {
 
       if (!clap) { throw new Error(`failed to edit the dialogues`) }
 
-      console.log(`handleSubmit(): received dialogues = `, clap)
+      console.log(`generateDialogues(): received dialogues = `, clap)
       setVoiceGenerationStatus("finished")
       console.log("---------------- GENERATED DIALOGUES ----------------")
       console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.DIALOGUE), [
@@ -322,6 +332,14 @@ export function useProcessors() {
   }
   
   const handleSubmit = async () => {
+
+    if (busyRef.current) { return }
+
+    if (enableOAuthWall && !isLoggedIn) {
+      setShowAuthWall(true)
+      return
+    }
+
     setStatus("generating")
     busyRef.current = true
 
@@ -425,9 +443,22 @@ export function useProcessors() {
         setStatus("finished")
         setError("")
       } catch (err) {
-        console.error(`failed to generate: `, err)
-        setStatus("error")
-        setError(`Error, please contact an admin on Discord (${err})`)
+
+        if (isRateLimitError(err)) {
+          console.error("Critical error: you are doing too many requests!")
+          toast({
+            title: "You can generate only one video per minute 👀",
+            description: "Don't send too many requests at once 🤗",
+          })
+          return
+        } else {
+          console.error(err)
+          toast({
+            title: "We couldn't generate this video 👀",
+            description: "We are currently experiencing a surge in traffic, please try later in the day 🤗",
+          })
+        }
+
       }
     })
   }
