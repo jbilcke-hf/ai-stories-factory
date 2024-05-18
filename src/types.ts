@@ -11,6 +11,7 @@ export type GlobalStatus =
   | "error"
 
 export type GenerationStage =
+  | "parse"
   | "story"
   | "entities"
   | "sounds"

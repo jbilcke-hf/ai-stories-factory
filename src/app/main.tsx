@@ -11,9 +11,8 @@ import { Toaster } from "@/components/ui/sonner"
 import { TextareaField } from "@/components/form/textarea-field"
 
 import { cn, generateRandomStory } from "@/lib/utils"
-import { defaultPrompt } from "./config"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useIsBusy, useOrientation, useProgressTimer, useQueryStringParams, useStoryPromptDraft } from "@/lib/hooks"
+import { useIsBusy, useOrientation, useQueryStringParams, useStoryPromptDraft } from "@/lib/hooks"
 import { BottomBar, VideoPreview } from "@/components/interface"
 import { MainTitle } from "@/components/interface/main-title"
 import { LoadClapButton } from "@/components/interface/load-clap-button"
@@ -21,8 +20,10 @@ import { SaveClapButton } from "@/components/interface/save-clap-button"
 import { useProcessors } from "@/lib/hooks/useProcessors"
 import { Characters } from "@/components/interface/characters"
 import { useOAuth } from "@/lib/oauth/useOAuth"
-import { useStore } from "./store"
 import { AuthWall } from "@/components/interface/auth-wall"
+
+import { defaultPrompt } from "./config"
+import { useStore } from "./store"
 
 export function Main() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
@@ -32,7 +33,7 @@ export function Main() {
   useQueryStringParams()
     
   const showAuthWall = useStore(s => s.showAuthWall)
-  const { isLoggedIn, enableOAuthWall } = useOAuth({ debug: true })
+  const { isLoggedIn, enableOAuthWall } = useOAuth()
 
   return (
     <TooltipProvider>

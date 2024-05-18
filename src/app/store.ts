@@ -21,7 +21,7 @@ export const useStore = create<{
 
   status: GlobalStatus
   stage: GenerationStage
-
+  statusMessage: string
   parseGenerationStatus: TaskStatus
   storyGenerationStatus: TaskStatus
   assetGenerationStatus: TaskStatus
@@ -81,6 +81,7 @@ export const useStore = create<{
   orientation: ClapMediaOrientation.PORTRAIT,
   status: "idle",
   stage: "idle",
+  statusMessage: "",
   parseGenerationStatus: "idle",
   storyGenerationStatus: "idle",
   assetGenerationStatus: "idle",
@@ -173,12 +174,13 @@ export const useStore = create<{
     get().syncStatusAndStageState()
   },
   syncStatusAndStageState: () => {
-    const { status, storyGenerationStatus, assetGenerationStatus, soundGenerationStatus, musicGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus, finalGenerationStatus } = get()
+    const { status, parseGenerationStatus, storyGenerationStatus, assetGenerationStatus, soundGenerationStatus, musicGenerationStatus, voiceGenerationStatus, imageGenerationStatus, videoGenerationStatus, finalGenerationStatus } = get()
 
     // note: we don't really have "stages" since some things run in parallel,
     // and some parallel tasks may finish before the others
     // still, we need to estimate how long things should take, so it has some usefulness
     let stage: GenerationStage =
+      parseGenerationStatus === "generating" ? "parse" :
       storyGenerationStatus === "generating" ? "story" :
       assetGenerationStatus === "generating" ? "entities" :
       musicGenerationStatus === "generating" ? "music" :
@@ -194,7 +196,25 @@ export const useStore = create<{
     // that is because we can have parallelism
     const isBusy = stage !== "idle" || status === "generating"
     
-    set({ isBusy, stage })
+
+  const statusMessage = isBusy ? (
+    // note: some of those tasks are running in parallel,
+    // and some are super-slow (like music or video)
+    // by carefully selecting in which order we set the ternaries,
+    // we can create the illusion that we just have a succession of reasonably-sized tasks
+    storyGenerationStatus === "generating" ? "Writing story.."
+    : parseGenerationStatus === "generating" ? "Loading the project.."
+    : assetGenerationStatus === "generating" ? "Casting characters.."
+    : imageGenerationStatus === "generating" ? "Creating storyboards.."
+    : soundGenerationStatus === "generating" ? "Recording sounds.."
+    : videoGenerationStatus === "generating" ? "Filming shots.."
+    : musicGenerationStatus === "generating" ? "Producing music.."
+    : voiceGenerationStatus === "generating" ? "Recording dialogues.."
+    : finalGenerationStatus === "generating" ? "Editing final cut.."
+    : "Please wait.."
+  ) : ""
+
+    set({ isBusy, stage, statusMessage })
   },
   setCurrentClap: (currentClap?: ClapProject) => { set({ currentClap }) },
   setCurrentVideo: async (currentVideo: string): Promise<void> => {
