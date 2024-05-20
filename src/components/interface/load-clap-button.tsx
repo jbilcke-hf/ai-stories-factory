@@ -29,8 +29,8 @@ export function LoadClapButton() {
           storyPromptDraft ? "opacity-100" : "opacity-80"
         )}
       >
-        <span className="hidden xl:inline mr-1">Load .clap</span>
-        <span className="inline xl:hidden mr-1">Load .clap</span>
+        <span className="hidden xl:inline mr-1">Load</span>
+        <span className="inline xl:hidden mr-1">Load</span>
       </Button></TooltipTrigger>
     <TooltipContent side="top">
       <p className="text-xs font-normal text-stone-100/90 text-center">

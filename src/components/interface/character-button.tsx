@@ -68,8 +68,7 @@ export function CharacterButton({
       </div></TooltipTrigger>
       <TooltipContent side="top">
         <p className="text-xs font-normal text-stone-100/90 text-center">
-        Using this experimental<br/>feature may reduce<br/>
-       the quality of images.
+        Add a picture of yourself<br/>to be part of the story!
         </p>
       </TooltipContent>
     </Tooltip> 
