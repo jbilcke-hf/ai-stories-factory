@@ -5,6 +5,7 @@ import { editClapStory as apiEditClapStory, ClapCompletionMode } from "@aitube/c
 
 import { getToken } from "./getToken"
 import { Workaround } from "./types"
+import { MAX_PROMPT_LENGTH_IN_CHARS } from "../config"
 
 export async function editClapStory({
   clap,
@@ -22,7 +23,7 @@ export async function editClapStory({
   async function promise() {
     return await apiEditClapStory({
       clap,
-      prompt,
+      prompt: `${prompt || ""}`.slice(0, MAX_PROMPT_LENGTH_IN_CHARS),
       startTimeInMs,
       endTimeInMs,
       completionMode: ClapCompletionMode.MERGE,

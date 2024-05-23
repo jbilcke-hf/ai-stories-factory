@@ -9,3 +9,5 @@ export const RESOLUTION_LONG = 896 // 832 // 768
 export const RESOLUTION_SHORT = 512 // 448 // 384
 
 // ValueError: `height` and `width` have to be divisible by 8 but are 512 and 1.
+
+export const MAX_PROMPT_LENGTH_IN_CHARS = 1024

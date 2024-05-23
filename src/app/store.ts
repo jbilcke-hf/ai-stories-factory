@@ -33,7 +33,14 @@ export const useStore = create<{
   finalGenerationStatus: TaskStatus
   isBusy: boolean
 
-  currentClap?: ClapProject
+  // a clap file stripped of all its image, video and audio assets
+  // this lightweight clap (which can still grow large)
+  // is best suited for doing API calls
+  skeletonClap?: ClapProject
+
+  // the full clap file, with all the binary assets
+  fullClap?: ClapProject
+
   currentVideo: string
 
   // orientation of the currently loaded video (which can be different from `orientation`)
@@ -60,7 +67,8 @@ export const useStore = create<{
   setVideoGenerationStatus: (videoGenerationStatus: TaskStatus) => void
   setFinalGenerationStatus: (finalGenerationStatus: TaskStatus) => void
   syncStatusAndStageState: () => void
-  setCurrentClap: (currentClap?: ClapProject) => void
+  setSkeletonClap: (fullClap?: ClapProject) => void
+  setFullClap: (fullClap?: ClapProject) => void
 
   // note: this will preload the video, and compute the orientation too
   setCurrentVideo: (currentVideo: string) => Promise<void>
@@ -92,7 +100,8 @@ export const useStore = create<{
   videoGenerationStatus: "idle",
   finalGenerationStatus: "idle",
   isBusy: false,
-  currentClap: undefined,
+  skeletonClap: undefined,
+  fullClap: undefined,
   currentVideo: "",
   currentVideoOrientation: ClapMediaOrientation.PORTRAIT,
   progress: 0,
@@ -216,7 +225,8 @@ export const useStore = create<{
 
     set({ isBusy, stage, statusMessage })
   },
-  setCurrentClap: (currentClap?: ClapProject) => { set({ currentClap }) },
+  setSkeletonClap: (skeletonClap?: ClapProject) => { set({ skeletonClap }) },
+  setFullClap: (fullClap?: ClapProject) => { set({ fullClap }) },
   setCurrentVideo: async (currentVideo: string): Promise<void> => {
     set({
       currentVideo,
@@ -244,10 +254,10 @@ export const useStore = create<{
 
     if (!currentVideo) { throw new Error(`cannot save a video.. if there is no video`) }
 
-    const currentClapBlob: Blob = await fetch(currentVideo).then(r => r.blob())
+    const fullClapBlob: Blob = await fetch(currentVideo).then(r => r.blob())
    
     // Create an object URL for the compressed clap blob
-    const objectUrl = URL.createObjectURL(currentClapBlob)
+    const objectUrl = URL.createObjectURL(fullClapBlob)
   
     // Create an anchor element and force browser download
     const anchor = document.createElement("a")
@@ -269,24 +279,24 @@ export const useStore = create<{
     document.body.removeChild(anchor)
   },
   saveClap: async (): Promise<void> => {
-    const { currentClap , storyPrompt, currentVideo } = get()
+    const { fullClap , storyPrompt, currentVideo } = get()
 
-    if (!currentClap) { throw new Error(`cannot save a clap.. if there is no clap`) }
+    if (!fullClap) { throw new Error(`cannot save a clap.. if there is no clap`) }
 
-    currentClap.meta.description = storyPrompt
+    fullClap.meta.description = storyPrompt
 
     // make sure we update the total duration
-    for (const s of currentClap.segments) {
-      if (s.endTimeInMs > currentClap.meta.durationInMs) {
-        currentClap.meta.durationInMs = s.endTimeInMs
+    for (const s of fullClap.segments) {
+      if (s.endTimeInMs > fullClap.meta.durationInMs) {
+        fullClap.meta.durationInMs = s.endTimeInMs
       }
     }
 
-    const alreadyAnEmbeddedFinalVideo = currentClap.segments.filter(s =>
+    const alreadyAnEmbeddedFinalVideo = fullClap.segments.filter(s =>
       s.category === ClapSegmentCategory.VIDEO &&
       s.status === "completed" &&
       s.startTimeInMs === 0 &&
-      s.endTimeInMs === currentClap.meta.durationInMs &&
+      s.endTimeInMs === fullClap.meta.durationInMs &&
       s.assetUrl).at(0)
 
     // inject the final mp4 video file into the .clap
@@ -295,21 +305,21 @@ export const useStore = create<{
       alreadyAnEmbeddedFinalVideo.assetUrl = currentVideo
     } else {
       console.log(`editing the clap to add a new final video`)
-      currentClap.segments.push(newSegment({
+      fullClap.segments.push(newSegment({
         category: ClapSegmentCategory.VIDEO,
         status: "completed",
         startTimeInMs: 0,
-        endTimeInMs: currentClap.meta.durationInMs,
+        endTimeInMs: fullClap.meta.durationInMs,
         assetUrl: currentVideo,
-        assetDurationInMs: currentClap.meta.durationInMs,
+        assetDurationInMs: fullClap.meta.durationInMs,
         assetSourceType: getClapAssetSourceType(currentVideo),
         outputGain: 1.0,
       }))
     }
-    const currentClapBlob: Blob = await serializeClap(currentClap)
+    const fullClapBlob: Blob = await serializeClap(fullClap)
 
     // Create an object URL for the compressed clap blob
-    const objectUrl = URL.createObjectURL(currentClapBlob)
+    const objectUrl = URL.createObjectURL(fullClapBlob)
   
     // Create an anchor element and force browser download
     const anchor = document.createElement("a")
@@ -338,31 +348,31 @@ export const useStore = create<{
       throw new Error(`missing blob`)
     }
 
-    const currentClap: ClapProject | undefined = await parseClap(blob)
+    const fullClap: ClapProject | undefined = await parseClap(blob)
 
-    if (!currentClap) { throw new Error(`failed to import the clap`) }
+    if (!fullClap) { throw new Error(`failed to import the clap`) }
 
-    const storyPrompt = currentClap.meta.description.split("||").pop() || ""
+    const storyPrompt = fullClap.meta.description.split("||").pop() || ""
 
     putTextInTextAreaElement(
       document.getElementById("story-prompt-draft") as HTMLTextAreaElement,
       storyPrompt
     )
 
-    const orientation = parseMediaOrientation(currentClap.meta.orientation)
+    const orientation = parseMediaOrientation(fullClap.meta.orientation)
 
-    currentClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
-    currentClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
+    fullClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
+    fullClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
 
-    const embeddedFinalVideoAssetUrl = currentClap.segments.filter(s =>
+    const embeddedFinalVideoAssetUrl = fullClap.segments.filter(s =>
       s.category === ClapSegmentCategory.VIDEO &&
       s.status === "completed" &&
       s.startTimeInMs === 0 &&
-      s.endTimeInMs === currentClap.meta.durationInMs &&
+      s.endTimeInMs === fullClap.meta.durationInMs &&
       s.assetUrl).map(s => s.assetUrl).at(0)
 
     set({
-      currentClap,
+      fullClap,
       storyPrompt,
       orientation,
       currentVideo: embeddedFinalVideoAssetUrl || get().currentVideo,
@@ -370,7 +380,7 @@ export const useStore = create<{
     })
 
     return {
-      clap: currentClap,
+      clap: fullClap,
       regenerateVideo: !embeddedFinalVideoAssetUrl,
     }
   },

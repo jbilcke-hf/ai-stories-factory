@@ -29,9 +29,11 @@ export function Main() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
   const  { isBusy } = useIsBusy()
   const { orientation, toggleOrientation } = useOrientation()
-  const { handleSubmit } = useProcessors()
+  const { handleCreateStory, handleExtendStory } = useProcessors()
   useQueryStringParams()
-    
+
+  const currentVideo = useStore(s => s.currentVideo)
+
   const showAuthWall = useStore(s => s.showAuthWall)
   const { isLoggedIn, enableOAuthWall } = useOAuth()
 
@@ -282,7 +284,7 @@ export function Main() {
                         </div>
                         {/* END OF ORIENTATION SWITCH */}
                         <Button
-                          onClick={handleSubmit}
+                          onClick={currentVideo ? handleExtendStory : handleCreateStory}
                           disabled={!storyPromptDraft || isBusy || !isLoggedIn}
                           // variant="ghost"
                           className={cn(
@@ -293,7 +295,9 @@ export function Main() {
                             storyPromptDraft ? "opacity-100" : "opacity-80"
                           )}
                         >
-                        <span className="mr-1.5">Create</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
+                        <span className="mr-1.5">{
+                          currentVideo ? 'Extend' : 'Create'
+                        }</span><span className="hidden md:inline">👉</span><span className="inline md:hidden">👇</span>
                         </Button>
                       </div>
 

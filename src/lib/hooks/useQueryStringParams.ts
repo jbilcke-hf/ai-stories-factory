@@ -11,7 +11,7 @@ import { useProcessors } from "./useProcessors"
 export function useQueryStringParams() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
   const { busyRef } = useIsBusy()
-  const { handleSubmit } = useProcessors()
+  const { handleCreateStory } = useProcessors()
   
   const setOrientation = useStore(s => s.setOrientation)
   // this is how we support query string parameters
@@ -43,7 +43,7 @@ export function useQueryStringParams() {
       // note: during development we will be called twice,
       // which is why we have a guard on  busyRef.current
       if (maybeAutorun === "true" || maybeAutorun === "1" && !busyRef.current) {
-        handleSubmit()
+        handleCreateStory()
       }
     }
   }, [queryStringPrompt, queryStringAutorun, queryStringOrientation])

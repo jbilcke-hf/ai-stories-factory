@@ -7,7 +7,7 @@ import { ClapProject, ClapMediaOrientation } from "@aitube/clap"
 import { createClap as apiCreateClap } from "@aitube/client"
 
 import { getToken } from "./getToken"
-import { RESOLUTION_LONG, RESOLUTION_SHORT } from "../config"
+import { RESOLUTION_LONG, RESOLUTION_SHORT, MAX_PROMPT_LENGTH_IN_CHARS } from "../config"
 import { getRateLimit } from "../redis/getRateLimit"
 
 const rateLimit = getRateLimit()
@@ -40,7 +40,7 @@ export async function createClap({
   */
 
   const clap: ClapProject = await apiCreateClap({
-    prompt: prompt.slice(0, 512),
+    prompt: prompt.slice(0, MAX_PROMPT_LENGTH_IN_CHARS),
 
     height: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_LONG : RESOLUTION_SHORT,
     width: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG,

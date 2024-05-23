@@ -9,7 +9,7 @@ import { useProcessors } from "./useProcessors"
 export function useImportClap() {
 
   const setError = useStore(s => s.setError)
-  const setCurrentClap = useStore(s => s.setCurrentClap)
+  const setFullClap = useStore(s => s.setFullClap)
   const loadClap = useStore(s => s.loadClap)
 
   const {
@@ -65,13 +65,13 @@ export function useImportClap() {
         
         // clap = await generateSounds(clap)
 
-        // setCurrentClap(clap)
+        // setFullClap(clap)
 
-        console.log("loadClap(): clap = ", clap)
+        console.log("importClap: clap = ", clap)
 
         // it is important to skip regeneration if we already have a video
         if (regenerateVideo) {
-          console.log(`regenerating music and videos..`)
+          console.log(`importClap: regenerating music and videos..`)
           const claps = await Promise.all([
             generateMusic(clap),
             generateVideos(clap)
@@ -87,12 +87,12 @@ export function useImportClap() {
           }
 
 
-          setCurrentClap(clap)
+          setFullClap(clap)
 
           await generateFinalVideo(clap)
 
         } else {
-          console.log(`skipping music and video regeneration`)
+          console.log(`importClap: skipping music and video regeneration`)
         }
 
         setStatus("finished")

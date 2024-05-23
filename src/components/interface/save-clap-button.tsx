@@ -12,7 +12,7 @@ import { useIsBusy, useStoryPromptDraft } from "@/lib/hooks"
 
 export function SaveClapButton() {
   const { isBusy } = useIsBusy()
-  const currentClap = useStore(s => s.currentClap)
+  const fullClap = useStore(s => s.fullClap)
   const saveClap = useStore(s => s.saveClap)
   const { storyPromptDraft } = useStoryPromptDraft()
 
@@ -20,7 +20,7 @@ export function SaveClapButton() {
       <Tooltip>
         <TooltipTrigger asChild><Button
       onClick={() => saveClap()}
-      disabled={!currentClap || isBusy}
+      disabled={!fullClap || isBusy}
       // variant="ghost"
       className={cn(
         `text-xs md:text-sm lg:text-base`,
@@ -30,8 +30,8 @@ export function SaveClapButton() {
         storyPromptDraft ? "opacity-100" : "opacity-80"
       )}
     >
-      <span className="hidden xl:inline mr-1">Save</span>
-      <span className="inline xl:hidden mr-1">Save</span>
+      <span className="hidden xl:inline">Save</span>
+      <span className="inline xl:hidden">Save</span>
     </Button></TooltipTrigger>
       <TooltipContent side="top">
         <p className="text-xs font-normal text-stone-100/90 text-center">
