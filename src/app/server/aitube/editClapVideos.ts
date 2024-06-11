@@ -1,7 +1,7 @@
 "use server"
 
-import { ClapProject } from "@aitube/clap"
-import { editClapVideos as apiEditClapVideos, ClapCompletionMode } from "@aitube/client"
+import { ClapProject, ClapCompletionMode } from "@aitube/clap"
+import { editClapVideos as apiEditClapVideos } from "@aitube/client"
 
 import { getToken } from "./getToken"
 import { Workaround } from "./types"
