@@ -1,6 +1,6 @@
 "use client"
 
-import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation, ClapSegmentCategory, newSegment, getClapAssetSourceType } from "@aitube/clap"
+import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation, ClapSegmentCategory, newSegment, getClapAssetSourceType, ClapSegmentStatus } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
@@ -294,7 +294,7 @@ export const useStore = create<{
 
     const alreadyAnEmbeddedFinalVideo = fullClap.segments.filter(s =>
       s.category === ClapSegmentCategory.VIDEO &&
-      s.status === "completed" &&
+      s.status === ClapSegmentStatus.COMPLETED &&
       s.startTimeInMs === 0 &&
       s.endTimeInMs === fullClap.meta.durationInMs &&
       s.assetUrl).at(0)
@@ -307,7 +307,7 @@ export const useStore = create<{
       console.log(`editing the clap to add a new final video`)
       fullClap.segments.push(newSegment({
         category: ClapSegmentCategory.VIDEO,
-        status: "completed",
+        status: ClapSegmentStatus.COMPLETED,
         startTimeInMs: 0,
         endTimeInMs: fullClap.meta.durationInMs,
         assetUrl: currentVideo,
@@ -366,7 +366,7 @@ export const useStore = create<{
 
     const embeddedFinalVideoAssetUrl = fullClap.segments.filter(s =>
       s.category === ClapSegmentCategory.VIDEO &&
-      s.status === "completed" &&
+      s.status === ClapSegmentStatus.COMPLETED &&
       s.startTimeInMs === 0 &&
       s.endTimeInMs === fullClap.meta.durationInMs &&
       s.assetUrl).map(s => s.assetUrl).at(0)

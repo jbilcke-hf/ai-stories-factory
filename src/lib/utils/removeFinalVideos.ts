@@ -1,9 +1,9 @@
-import { ClapProject, ClapSegment, ClapSegmentCategory } from "@aitube/clap"
+import { ClapProject, ClapSegment, ClapSegmentCategory, ClapSegmentStatus } from "@aitube/clap"
 
 export function removeFinalVideos(clap: ClapProject): ClapSegment[] {
   const alreadyAnEmbeddedFinalVideo = clap.segments.filter(s =>
     s.category === ClapSegmentCategory.VIDEO &&
-    s.status === "completed" &&
+    s.status === ClapSegmentStatus.COMPLETED &&
     s.startTimeInMs === 0 &&
     s.endTimeInMs === clap.meta.durationInMs &&
     s.assetUrl).at(0)

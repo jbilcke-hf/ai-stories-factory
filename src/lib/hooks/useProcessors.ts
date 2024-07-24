@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { ClapProject, ClapSegmentCategory, filterAssets, getClapAssetSourceType, newEntity, parseClap, serializeClap, updateClap } from "@aitube/clap"
+import { ClapProject, ClapSegmentCategory, ClapSegmentStatus, filterAssets, getClapAssetSourceType, newEntity, parseClap, serializeClap, updateClap } from "@aitube/clap"
 
 import { logImage } from "@/lib/utils"
 import { useIsBusy, useStoryPromptDraft } from "@/lib/hooks"
@@ -271,7 +271,7 @@ export function useProcessors() {
       clap.segments
         .filter(s => s.category === ClapSegmentCategory.STORYBOARD)
         .forEach((s, i) => {
-          if (s.status === "completed" && s.assetUrl) {
+          if (s.status === ClapSegmentStatus.COMPLETED && s.assetUrl) {
             // console.log(`  [${i}] storyboard: ${s.prompt}`)
             logImage(s.assetUrl, 0.35)
           } else {
