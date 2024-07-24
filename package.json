@@ -1,6 +1,6 @@
 {
   "name": "@jbilcke-hf/ai-stories-factory",
-  "version": "0.0.2",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aitube/clap": "0.0.27",
-    "@aitube/client": "0.0.36",
+    "@aitube/clap": "0.1.2",
+    "@aitube/client": "0.1.2",
     "@huggingface/hub": "^0.15.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
