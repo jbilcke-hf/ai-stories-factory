@@ -1,21 +1,21 @@
 import { useStore } from "@/app/store"
-import { ClapMediaOrientation } from "@aitube/clap"
+import { ClapImageRatio } from "@aitube/clap"
 
 export function useOrientation() {
-  const orientation = useStore(s => s.orientation)
-  const setOrientation = useStore(s => s.setOrientation)
-  const currentVideoOrientation = useStore(s => s.currentVideoOrientation)
+  const imageRatio = useStore(s => s.imageRatio)
+  const setImageRatio = useStore(s => s.setImageRatio)
+  const currentImageRatio = useStore(s => s.currentImageRatio)
   const toggleOrientation = useStore(s => s.toggleOrientation)
-  // note: we are interested in the *current* video orientation,
-  // not the requested video orientation requested for the next video
-  const isLandscape = currentVideoOrientation === ClapMediaOrientation.LANDSCAPE
-  const isPortrait = currentVideoOrientation === ClapMediaOrientation.PORTRAIT
-  const isSquare = currentVideoOrientation === ClapMediaOrientation.SQUARE
+  // note: we are interested in the *current* video imageRatio,
+  // not the requested video imageRatio requested for the next video
+  const isLandscape = currentImageRatio === ClapImageRatio.LANDSCAPE
+  const isPortrait = currentImageRatio === ClapImageRatio.PORTRAIT
+  const isSquare = currentImageRatio === ClapImageRatio.SQUARE
 
   return {
-    orientation,
-    setOrientation,
-    currentVideoOrientation,
+    imageRatio,
+    setImageRatio,
+    currentImageRatio,
     toggleOrientation,
     isLandscape,
     isPortrait,

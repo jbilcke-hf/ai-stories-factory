@@ -74,7 +74,7 @@ export function useProcessors() {
 
       clap = await createClap({
         prompt: promptDraftRef.current,
-        orientation: useStore.getState().orientation,
+        imageRatio: useStore.getState().imageRatio,
 
         turbo: false,
       })
@@ -264,22 +264,22 @@ export function useProcessors() {
       if (!clap) { throw new Error(`failed to edit the storyboards`) }
 
       // const fusion = 
-      console.log(`generateStoryboards(): received storyboards = `, clap)
+      console.log(`generateStoryboards(): received storyboard images = `, clap)
 
       setImageGenerationStatus("finished")
-      console.log("---------------- GENERATED STORYBOARDS ----------------")
+      console.log("---------------- GENERATED STORYBOARD IMAGES ----------------")
       clap.segments
-        .filter(s => s.category === ClapSegmentCategory.STORYBOARD)
+        .filter(s => s.category === ClapSegmentCategory.IMAGE)
         .forEach((s, i) => {
           if (s.status === ClapSegmentStatus.COMPLETED && s.assetUrl) {
             // console.log(`  [${i}] storyboard: ${s.prompt}`)
             logImage(s.assetUrl, 0.35)
           } else {
-            console.log(`  [${i}] failed to generate storyboard`)
+            console.log(`  [${i}] failed to generate storyboard images`)
           }
           // console.log(`------------------`)
         })
-      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.STORYBOARD), [
+      console.table(clap.segments.filter(s => s.category === ClapSegmentCategory.IMAGE), [
         'endTimeInMs',
         'prompt',
         'assetUrl'
@@ -376,14 +376,14 @@ export function useProcessors() {
   }
   
   const injectCharacters = async (clap: ClapProject): Promise<void> => {
-    const storyboards = clap.segments.filter(s => s.category === ClapSegmentCategory.STORYBOARD)
+    const storyboards = clap.segments.filter(s => s.category === ClapSegmentCategory.IMAGE)
 
     let mainCharacter = clap.entities.at(0)
 
     // let's do something basic for now: we only support 1 entity (character)
     // and we apply it to *all* the storyboards (we can always improve this later)
     if (mainCharacter) {
-      console.log(`injectCharacters(): we use the clap's main character's face on all storyboards`)
+      console.log(`injectCharacters(): we use the clap's main character's face on all storyboard images`)
       storyboards.forEach(storyboard => { storyboard.entityId = mainCharacter!.id })
       logImage(mainCharacter.imageId, 0.35)
     } else if (mainCharacterImage) {

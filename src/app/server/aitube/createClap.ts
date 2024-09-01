@@ -3,8 +3,8 @@
 
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
-import { ClapProject, ClapMediaOrientation } from "@aitube/clap"
-import { createClap as apiCreateClap } from "@aitube/client"
+import { ClapProject, ClapImageRatio } from "@aitube/clap"
+import { createClap as apiCreateClap } from "@aitube/api-client"
 
 import { getToken } from "./getToken"
 import { RESOLUTION_LONG, RESOLUTION_SHORT, MAX_PROMPT_LENGTH_IN_CHARS } from "../config"
@@ -14,11 +14,11 @@ const rateLimit = getRateLimit()
 
 export async function createClap({
   prompt = "",
-  orientation = ClapMediaOrientation.PORTRAIT,
+  imageRatio = ClapImageRatio.PORTRAIT,
   turbo = false,
 }: {
   prompt: string
-  orientation?: ClapMediaOrientation
+  imageRatio?: ClapImageRatio
   turbo?: boolean
 }): Promise<ClapProject> {
 
@@ -42,8 +42,8 @@ export async function createClap({
   const clap: ClapProject = await apiCreateClap({
     prompt: prompt.slice(0, MAX_PROMPT_LENGTH_IN_CHARS),
 
-    height: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_LONG : RESOLUTION_SHORT,
-    width: orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG,
+    height: imageRatio === ClapImageRatio.PORTRAIT ? RESOLUTION_LONG : RESOLUTION_SHORT,
+    width: imageRatio === ClapImageRatio.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG,
 
     turbo,
 

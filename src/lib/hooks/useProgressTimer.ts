@@ -1,10 +1,12 @@
+"use client"
+
 import { useStore } from "@/app/store"
 import { useEffect, useRef } from "react"
 import { useIsBusy } from "./useIsBusy"
 
 export function useProgressTimer() {
   const runningRef = useRef(false)
-  const timerRef = useRef<NodeJS.Timeout>()
+  const timerRef = useRef<Timer>()
 
   const progress = useStore(s => s.progress)
   const stage = useStore(s => s.stage)

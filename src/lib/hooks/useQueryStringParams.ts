@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import { ClapMediaOrientation } from "@aitube/clap"
+import { ClapImageRatio } from "@aitube/clap"
 
 import { useStore } from "@/app/store"
 
@@ -13,24 +13,24 @@ export function useQueryStringParams() {
   const { busyRef } = useIsBusy()
   const { handleCreateStory } = useProcessors()
   
-  const setOrientation = useStore(s => s.setOrientation)
+  const setImageRatio = useStore(s => s.setImageRatio)
   // this is how we support query string parameters
   // ?prompt=hello <- set a default prompt
   // ?prompt=hello&autorun=true <- automatically run the app
-  // ?orientation=landscape <- can be "landscape" or "portrait" (default)
+  // ?imageRatio=landscape <- can be "landscape" or "portrait" (default)
   const searchParams = useSearchParams()
   const queryStringPrompt = (searchParams?.get('prompt') as string) || ""
   const queryStringAutorun = (searchParams?.get('autorun') as string) || ""
-  const queryStringOrientation = (searchParams?.get('orientation') as string) || ""
+  const queryStringOrientation = (searchParams?.get('imageRatio') as string) || ""
 
   useEffect(() => {
     if (queryStringOrientation?.length > 1) {
-      console.log(`orientation = "${queryStringOrientation}"`)
-      const orientation =
+      console.log(`imageRatio = "${queryStringOrientation}"`)
+      const imageRatio =
         queryStringOrientation.trim().toLowerCase() === "landscape"
-        ? ClapMediaOrientation.LANDSCAPE
-        : ClapMediaOrientation.PORTRAIT
-      setOrientation(orientation)
+        ? ClapImageRatio.LANDSCAPE
+        : ClapImageRatio.PORTRAIT
+      setImageRatio(imageRatio)
     }
     if (queryStringPrompt?.length > 1) {
       console.log(`prompt = "${queryStringPrompt}"`)

@@ -3,7 +3,7 @@
 import React from "react"
 import { IoMdPhonePortrait } from "react-icons/io"
 import { GiRollingDices } from "react-icons/gi"
-import { ClapMediaOrientation } from "@aitube/clap"
+import { ClapImageRatio } from "@aitube/clap"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,7 @@ import { useStore } from "./store"
 export function Main() {
   const { storyPromptDraft, setStoryPromptDraft, promptDraftRef } = useStoryPromptDraft()
   const  { isBusy } = useIsBusy()
-  const { orientation, toggleOrientation } = useOrientation()
+  const { imageRatio, toggleOrientation } = useOrientation()
   const { handleCreateStory, handleExtendStory } = useProcessors()
   useQueryStringParams()
 
@@ -276,7 +276,7 @@ export function Main() {
                           >
                             <div className={cn(
                               `transition-all duration-200 ease-in-out`,
-                              orientation === ClapMediaOrientation.LANDSCAPE ? `rotate-90` : `rotate-0`
+                              imageRatio === ClapImageRatio.LANDSCAPE ? `rotate-90` : `rotate-0`
                             )}>
                               <IoMdPhonePortrait size={24} />
                             </div>

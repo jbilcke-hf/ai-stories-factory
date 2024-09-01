@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aitube/clap": "0.1.2",
-    "@aitube/client": "0.1.2",
+    "@aitube/clap": "0.2.4",
+    "@aitube/client": "0.2.4-3",
     "@huggingface/hub": "^0.15.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -46,7 +46,7 @@
     "jimp": "^0.22.12",
     "jose": "^5.2.4",
     "lucide-react": "^0.334.0",
-    "next": "^14.2.3",
+    "next": "^14.2.7",
     "next-themes": "^0.2.1",
     "postcss": "8.4.38",
     "qs": "^6.12.1",

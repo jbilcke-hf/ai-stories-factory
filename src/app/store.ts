@@ -1,10 +1,10 @@
 "use client"
 
-import { ClapProject, parseClap, serializeClap, ClapMediaOrientation, parseMediaOrientation, ClapSegmentCategory, newSegment, getClapAssetSourceType, ClapSegmentStatus } from "@aitube/clap"
+import { ClapProject, parseClap, serializeClap, ClapImageRatio, parseImageRatio, ClapSegmentCategory, newSegment, getClapAssetSourceType, ClapSegmentStatus } from "@aitube/clap"
 import { create } from "zustand"
 
 import { GenerationStage, GlobalStatus, TaskStatus } from "@/types"
-import { getVideoOrientation } from "@/lib/utils/getVideoOrientation"
+import { getImageRatio } from "@/lib/utils/getImageRatio"
 
 import { RESOLUTION_LONG, RESOLUTION_SHORT } from "./server/config"
 import { putTextInTextAreaElement } from "@/lib/utils/putTextInTextAreaElement"
@@ -15,9 +15,9 @@ export const useStore = create<{
   mainCharacterVoice: string
   storyPrompt: string
 
-  // the desired orientation for the next video
-  // but this won't impact the actual orientation of the fake device container
-  orientation: ClapMediaOrientation
+  // the desired imageRatio for the next video
+  // but this won't impact the actual imageRatio of the fake device container
+  imageRatio: ClapImageRatio
 
   status: GlobalStatus
   stage: GenerationStage
@@ -43,16 +43,16 @@ export const useStore = create<{
 
   currentVideo: string
 
-  // orientation of the currently loaded video (which can be different from `orientation`)
-  // it will impact the actual orientation of the fake device container
-  currentVideoOrientation: ClapMediaOrientation
+  // imageRatio of the currently loaded video (which can be different from `imageRatio`)
+  // it will impact the actual imageRatio of the fake device container
+  currentImageRatio: ClapImageRatio
   progress: number
   error: string
   showAuthWall: boolean
   setShowAuthWall: (showAuthWall: boolean) => void
   toggleOrientation: () => void
-  setOrientation: (orientation: ClapMediaOrientation) => void
-  setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => void
+  setImageRatio: (imageRatio: ClapImageRatio) => void
+  setCurrentVideoOrientation: (currentImageRatio: ClapImageRatio) => void
   setMainCharacterImage: (mainCharacterImage: string) => void
   setMainCharacterVoice: (mainCharacterVoice: string) => void
   setStoryPrompt: (storyPrompt: string) => void
@@ -70,7 +70,7 @@ export const useStore = create<{
   setSkeletonClap: (fullClap?: ClapProject) => void
   setFullClap: (fullClap?: ClapProject) => void
 
-  // note: this will preload the video, and compute the orientation too
+  // note: this will preload the video, and compute the imageRatio too
   setCurrentVideo: (currentVideo: string) => Promise<void>
 
   setProgress: (progress: number) => void
@@ -86,7 +86,7 @@ export const useStore = create<{
   mainCharacterVoice: "",
   storyPromptDraft: defaultPrompt,
   storyPrompt: "",
-  orientation: ClapMediaOrientation.PORTRAIT,
+  imageRatio: ClapImageRatio.PORTRAIT,
   status: "idle",
   stage: "idle",
   statusMessage: "",
@@ -103,42 +103,42 @@ export const useStore = create<{
   skeletonClap: undefined,
   fullClap: undefined,
   currentVideo: "",
-  currentVideoOrientation: ClapMediaOrientation.PORTRAIT,
+  currentImageRatio: ClapImageRatio.PORTRAIT,
   progress: 0,
   error: "",
   showAuthWall: false,
   setShowAuthWall: (showAuthWall: boolean) => { set({ showAuthWall }) },
   toggleOrientation: () => {
-    const { orientation: previousOrientation, currentVideoOrientation, currentVideo } = get()
-    const orientation =
-      previousOrientation === ClapMediaOrientation.LANDSCAPE
-      ? ClapMediaOrientation.PORTRAIT
-      : ClapMediaOrientation.LANDSCAPE
+    const { imageRatio: previousOrientation, currentImageRatio, currentVideo } = get()
+    const imageRatio =
+      previousOrientation === ClapImageRatio.LANDSCAPE
+      ? ClapImageRatio.PORTRAIT
+      : ClapImageRatio.LANDSCAPE
 
     set({
-      orientation,
+      imageRatio,
 
-      // we normally don't touch the currentVideoOrientation since it will already contain a video
-      currentVideoOrientation:
+      // we normally don't touch the currentImageRatio since it will already contain a video
+      currentImageRatio:
         currentVideo
-        ? currentVideoOrientation
-        : orientation
+        ? currentImageRatio
+        : imageRatio
     })
   },
-  setOrientation: (orientation: ClapMediaOrientation) => {
-    const { currentVideoOrientation, currentVideo } = get()
+  setImageRatio: (imageRatio: ClapImageRatio) => {
+    const { currentImageRatio, currentVideo } = get()
 
     set({
-      orientation,
+      imageRatio,
 
-      // we normally don't touch the currentVideoOrientation since it will already contain a video
-      currentVideoOrientation:
+      // we normally don't touch the currentImageRatio since it will already contain a video
+      currentImageRatio:
         currentVideo
-        ? currentVideoOrientation
-        : orientation
+        ? currentImageRatio
+        : imageRatio
     })
   },
-  setCurrentVideoOrientation: (currentVideoOrientation: ClapMediaOrientation) => { set({ currentVideoOrientation }) },
+  setCurrentVideoOrientation: (currentImageRatio: ClapImageRatio) => { set({ currentImageRatio }) },
   setMainCharacterImage: (mainCharacterImage: string) => { set({ mainCharacterImage }) },
   setMainCharacterVoice: (mainCharacterVoice: string) => { set({ mainCharacterVoice }) },
   setStoryPrompt: (storyPrompt: string) => { set({ storyPrompt }) },
@@ -231,18 +231,18 @@ export const useStore = create<{
     set({
       currentVideo,
     })
-    const { currentVideoOrientation } = get()
-    let orientation: ClapMediaOrientation = currentVideoOrientation
+    const { currentImageRatio } = get()
+    let imageRatio: ClapImageRatio = currentImageRatio
     try {
-      let newOrientation = await getVideoOrientation(currentVideo)
+      let newOrientation = await getImageRatio(currentVideo)
       if (newOrientation) {
-        orientation = newOrientation
+        imageRatio = newOrientation
       }
     } catch (err) {
-      console.error(`failed to get the media orientation`)
+      console.error(`failed to get the media imageRatio`)
     }
     set({
-      currentVideoOrientation: orientation
+      currentImageRatio: imageRatio
     })
 
     // get().syncStatusAndStageState()
@@ -359,10 +359,10 @@ export const useStore = create<{
       storyPrompt
     )
 
-    const orientation = parseMediaOrientation(fullClap.meta.orientation)
+    const imageRatio = parseImageRatio(fullClap.meta.imageRatio)
 
-    fullClap.meta.height = orientation === ClapMediaOrientation.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
-    fullClap.meta.width = orientation === ClapMediaOrientation.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
+    fullClap.meta.height = imageRatio === ClapImageRatio.LANDSCAPE ? RESOLUTION_SHORT : RESOLUTION_LONG
+    fullClap.meta.width = imageRatio === ClapImageRatio.PORTRAIT ? RESOLUTION_SHORT : RESOLUTION_LONG
 
     const embeddedFinalVideoAssetUrl = fullClap.segments.filter(s =>
       s.category === ClapSegmentCategory.VIDEO &&
@@ -374,9 +374,9 @@ export const useStore = create<{
     set({
       fullClap,
       storyPrompt,
-      orientation,
+      imageRatio,
       currentVideo: embeddedFinalVideoAssetUrl || get().currentVideo,
-      currentVideoOrientation: orientation,
+      currentImageRatio: imageRatio,
     })
 
     return {
