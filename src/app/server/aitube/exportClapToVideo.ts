@@ -1,7 +1,7 @@
 "use server"
 
 import { ClapProject } from "@aitube/clap"
-import { exportClapToVideo as apiExportClapToVideo } from "@aitube/api-client"
+import { exportClapToVideo as apiExportClapToVideo } from "@aitube/client"
 
 import { getToken } from "./getToken"
 import { removeFinalVideos } from "@/lib/utils/removeFinalVideos"

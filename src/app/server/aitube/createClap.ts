@@ -4,7 +4,7 @@
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 import { ClapProject, ClapImageRatio } from "@aitube/clap"
-import { createClap as apiCreateClap } from "@aitube/api-client"
+import { createClap as apiCreateClap } from "@aitube/client"
 
 import { getToken } from "./getToken"
 import { RESOLUTION_LONG, RESOLUTION_SHORT, MAX_PROMPT_LENGTH_IN_CHARS } from "../config"
